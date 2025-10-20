@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, uuid, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -33,6 +33,7 @@ export const session = pgTable("session", {
     .references(() => user.id, { onDelete: "cascade" }),
   impersonatedBy: uuid("impersonated_by"),
   activeOrganizationId: uuid("active_organization_id"),
+  active_lab_id: uuid("active_lab_id"),
 });
 
 export const account = pgTable("account", {
@@ -67,12 +68,46 @@ export const verification = pgTable("verification", {
     .notNull(),
 });
 
+export const lab = pgTable("lab", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  teamId: text("team_id").notNull(),
+  organization_id: uuid("organization_id")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
+  description: text("description"),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
+  isDefault: boolean("is_default").default(false).notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").$onUpdate(() => /* @__PURE__ */ new Date()),
+  created_by_member_id: uuid("created_by_member_id"),
+}, (table) => [
+  uniqueIndex("lab_team_id_idx").on(table.teamId),
+  uniqueIndex("lab_org_slug_idx").on(table.organization_id, table.slug),
+]);
+
+export const lab_member = pgTable("lab_member", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  lab_id: uuid("lab_id")
+    .notNull()
+    .references(() => lab.id, { onDelete: "cascade" }),
+  user_id: uuid("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  organization_member_id: uuid("organization_member_id").references(() => member.id, { onDelete: "set null" }),
+  added_by_member_id: uuid("added_by_member_id").references(() => member.id, { onDelete: "set null" }),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("lab_member_unique_idx").on(table.lab_id, table.user_id),
+]);
+
 export const organization = pgTable("organization", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   logo: text("logo"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").notNull(),
   metadata: text("metadata"),
 });
 
@@ -85,7 +120,7 @@ export const member = pgTable("member", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   role: text("role").default("member").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").notNull(),
 });
 
 export const invitation = pgTable("invitation", {
@@ -95,6 +130,7 @@ export const invitation = pgTable("invitation", {
     .references(() => organization.id, { onDelete: "cascade" }),
   email: text("email").notNull(),
   role: text("role"),
+  lab_id: uuid("lab_id"),
   status: text("status").default("pending").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   inviterId: uuid("inviter_id")

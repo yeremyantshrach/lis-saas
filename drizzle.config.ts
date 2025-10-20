@@ -24,7 +24,7 @@ const env = Object.fromEntries(
 
 export default defineConfig({
   dialect: "postgresql",
-  schema: "./src/lib/auth-schema.ts",
+  schema: "./src/lib/schema.ts",
   out: "./drizzle",
   dbCredentials: {
     host: env.POSTGRES_HOST,
