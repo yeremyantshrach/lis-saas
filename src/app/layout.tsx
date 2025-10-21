@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import { PublicNavBar } from "@/components/public-nav-bar";
+import { AuthRedirectProvider } from "@/components/providers/auth-redirect-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,13 +23,12 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <PublicNavBar signInHref="/sign-in" ctaHref="/sign-up" />
-        {children}
+        <AuthRedirectProvider>{children}</AuthRedirectProvider>
         <Toaster />
       </body>
     </html>

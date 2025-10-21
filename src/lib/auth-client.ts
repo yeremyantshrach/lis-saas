@@ -1,4 +1,5 @@
-import { createAuthClient } from "better-auth/client";
+import { createAuthClient } from "better-auth/react";
+import { inferAdditionalFields } from "better-auth/client/plugins";
 import { adminClient, organizationClient } from "better-auth/client/plugins";
 import { adminAccessControl, admin, support } from "@/lib/auth/admin-permissions";
 import {
@@ -10,6 +11,7 @@ import {
   organizationAccessControl,
   orgOwner,
 } from "@/lib/auth/organization-permissions";
+import type { auth } from "@/lib/auth";
 
 export const authClient = createAuthClient({
   plugins: [
@@ -34,5 +36,8 @@ export const authClient = createAuthClient({
         enabled: true,
       },
     }),
+    inferAdditionalFields<typeof auth>(),
   ],
 });
+
+export type Session = typeof authClient.$Infer.Session;

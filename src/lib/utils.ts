@@ -14,3 +14,12 @@ export function slugify(value: string) {
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
 }
+
+export function getInitials(sentence: string): string {
+  return sentence
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.charAt(0))
+    .join("")
+    .toUpperCase();
+}

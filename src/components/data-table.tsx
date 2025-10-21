@@ -431,7 +431,7 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
                       key={column.id}
                       className="capitalize"
                       checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      onCheckedChange={column.toggleVisibility}
                     >
                       {column.id}
                     </DropdownMenuCheckboxItem>

@@ -8,7 +8,7 @@ import { ComponentProps, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, type SignupFormData } from "@/lib/validations/auth";
-import { signupAction } from "@/app/(auth)/sign-up/actions";
+import { signupAction } from "@/app/(public-layout)/(auth)/sign-up/actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";

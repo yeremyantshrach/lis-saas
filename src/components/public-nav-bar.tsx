@@ -12,6 +12,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
+import { Spinner } from "@/components/ui/spinner";
+import { UserAvatar } from "@/components/user-avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { IconLogout } from "@tabler/icons-react";
 
 // Simple logo component for the navbar
 const Logo = (props: React.SVGAttributes<SVGElement>) => {
@@ -108,20 +120,18 @@ export const PublicNavBar = React.forwardRef<HTMLElement, PublicNavBarProps>(
     {
       className,
       logo = <Logo />,
-      logoHref = "#",
       navigationLinks = defaultNavigationLinks,
       signInText = "Sign In",
       signInHref = "#signin",
       ctaText = "Get Started",
       ctaHref = "#get-started",
-      onSignInClick,
-      onCtaClick,
       ...props
     },
     ref,
   ) => {
     const isMobile = useIsMobile();
     const containerRef = useRef<HTMLElement>(null);
+    const { data: session, isPending } = authClient.useSession();
 
     // Combine refs
     const combinedRef = React.useCallback(
@@ -217,19 +227,43 @@ export const PublicNavBar = React.forwardRef<HTMLElement, PublicNavBarProps>(
             </div>
           </div>
           {/* Right side */}
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-              asChild
-            >
-              <Link href={signInHref}>{signInText}</Link>
-            </Button>
-            <Button size="sm" className="text-sm font-medium px-4 h-9 rounded-md shadow-sm" asChild>
-              <Link href={ctaHref}>{ctaText}</Link>
-            </Button>
-          </div>
+          {isPending && <Spinner />}
+          {!isPending && session?.user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="p-0">
+                  <UserAvatar image={session.user.image} name={session.user.name} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="start">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => authClient.signOut()} className="cursor-pointer">
+                  <IconLogout />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {!isPending && !session?.user && (
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                asChild
+              >
+                <Link href={signInHref}>{signInText}</Link>
+              </Button>
+              <Button
+                size="sm"
+                className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
+                asChild
+              >
+                <Link href={ctaHref}>{ctaText}</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </header>
     );

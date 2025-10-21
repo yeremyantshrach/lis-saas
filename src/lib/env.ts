@@ -29,10 +29,13 @@ function readEnv(key: EnvKey): string {
   return value;
 }
 
-const rawEnv = REQUIRED_ENV_KEYS.reduce<Record<EnvKey, string>>((acc, key) => {
-  acc[key] = readEnv(key);
-  return acc;
-}, {} as Record<EnvKey, string>);
+const rawEnv = REQUIRED_ENV_KEYS.reduce<Record<EnvKey, string>>(
+  (acc, key) => {
+    acc[key] = readEnv(key);
+    return acc;
+  },
+  {} as Record<EnvKey, string>,
+);
 
 function parsePort(value: string, key: EnvKey): number {
   const parsed = Number(value);

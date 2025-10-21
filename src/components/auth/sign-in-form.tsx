@@ -9,7 +9,7 @@ import { ComponentProps, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signinSchema, type SigninFormData } from "@/lib/validations/auth";
-import { signinAction } from "@/app/(auth)/sign-in/actions";
+import { signinAction } from "@/app/(public-layout)/(auth)/sign-in/actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -52,7 +52,9 @@ export function SignInForm({ className, ...props }: ComponentProps<"div">) {
         toast.success(result.message || "Signed in successfully!");
 
         // Redirect to dashboard after successful signin
-        router.push("/dashboard");
+        if (result.redirectUrl) {
+          window.location.href = result.redirectUrl;
+        }
       }
     });
   };

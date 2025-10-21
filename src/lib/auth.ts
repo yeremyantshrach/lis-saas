@@ -1,4 +1,5 @@
-import { betterAuth, APIError } from "better-auth";
+import { betterAuth, APIError, createMiddleware } from "better-auth";
+import { createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, organization } from "better-auth/plugins";
@@ -30,6 +31,7 @@ const stripe = stripePlugin({
 });
 
 export const auth = betterAuth({
+  appName: "LIS",
   baseURL: env.betterAuth.baseURL,
   secret: env.betterAuth.secret,
   emailAndPassword: {
@@ -39,7 +41,41 @@ export const auth = betterAuth({
     provider: "pg",
     schema,
     transaction: true,
+    debugLogs: {
+      create: true,
+    },
   }),
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          // Get the user's organization (they can only have one)
+          const userOrg = await db.query.member.findFirst({
+            where: (member, { eq }) => eq(member.userId, session.userId),
+            with: {
+              organization: true,
+            },
+          });
+
+          // Set the active organization if they have one
+          if (userOrg?.organization) {
+            return {
+              data: {
+                ...session,
+                activeOrganizationId: userOrg.organization.id,
+                // Store slug for easy client-side access
+                activeOrganizationSlug: userOrg.organization.slug,
+              },
+            };
+          }
+
+          return {
+            data: session,
+          };
+        },
+      },
+    },
+  },
   plugins: [
     nextCookies(),
     admin({
@@ -58,9 +94,11 @@ export const auth = betterAuth({
           return {
             data: {
               ...organization,
-              slug: slugify(organization.name),
             },
           };
+        },
+        afterCreateOrganization: async ({ organization }) => {
+
         },
       },
       schema: {
@@ -77,16 +115,19 @@ export const auth = betterAuth({
           modelName: "labs",
         },
         teamMember: {
-          modelName: "lab_team_member",
+          modelName: "labTeamMember",
         },
       },
       allowUserToCreateOrganization: true,
       organizationLimit: 1,
       teams: {
         enabled: true,
+        defaultTeam: {
+          enabled: false,
+        },
         maximumMembersPerTeam: 10,
       },
-      creatorRole: "orgOwner",
+      creatorRole: "org-owner",
       ac: organizationAccessControl,
       roles: {
         orgOwner,
