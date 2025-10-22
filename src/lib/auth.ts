@@ -1,5 +1,5 @@
 import { betterAuth, APIError, createMiddleware } from "better-auth";
-import { createAuthMiddleware } from "better-auth/api";
+import { customSession } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, organization } from "better-auth/plugins";
@@ -78,6 +78,22 @@ export const auth = betterAuth({
   },
   plugins: [
     nextCookies(),
+    customSession(async ({ session, user }) => {
+      const userOrg = await db.query.member.findFirst({
+        where: (member, { eq }) => eq(member.userId, session.userId),
+        with: {
+          organization: true,
+        },
+      });
+      return {
+        user,
+        session: {
+          ...session,
+          activeOrganizationId: userOrg?.organization?.id || null,
+          activeOrganizationSlug: userOrg?.organization?.slug || null,
+        },
+      };
+    }),
     admin({
       ac: adminAccessControl,
       roles: {
@@ -97,9 +113,7 @@ export const auth = betterAuth({
             },
           };
         },
-        afterCreateOrganization: async ({ organization }) => {
-
-        },
+        afterCreateOrganization: async ({ organization }) => {},
       },
       schema: {
         invitation: {

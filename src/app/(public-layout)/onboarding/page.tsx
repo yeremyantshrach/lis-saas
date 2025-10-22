@@ -1,6 +1,16 @@
+import { redirect } from "next/navigation";
+import { getPostAuthRedirect, requireAuthenticated } from "@/lib/auth-redirects";
 import { CreateOrganizationForm } from "./_components/create-organization-form";
 
-export default function OnboardingPage() {
+export default async function OnboardingPage() {
+  const session = await requireAuthenticated("/onboarding");
+
+  const activeOrgSlug = session.session?.activeOrganizationSlug;
+
+  if (activeOrgSlug) {
+    redirect(getPostAuthRedirect(session));
+  }
+
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-2xl">

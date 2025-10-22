@@ -23,7 +23,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { IconLogout } from "@tabler/icons-react";
+import { IconLogout, IconDashboard } from "@tabler/icons-react";
 
 // Simple logo component for the navbar
 const Logo = (props: React.SVGAttributes<SVGElement>) => {
@@ -145,7 +145,9 @@ export const PublicNavBar = React.forwardRef<HTMLElement, PublicNavBarProps>(
       },
       [ref],
     );
-
+    const dashboardUrl = session?.session?.activeOrganizationSlug
+      ? `/${session.session.activeOrganizationSlug}/dashboard`
+      : "/onboarding";
     return (
       <header
         ref={combinedRef}
@@ -237,6 +239,12 @@ export const PublicNavBar = React.forwardRef<HTMLElement, PublicNavBarProps>(
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="start">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <Link href={dashboardUrl}>
+                    <IconDashboard />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => authClient.signOut()} className="cursor-pointer">
                   <IconLogout />
