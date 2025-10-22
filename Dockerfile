@@ -17,6 +17,7 @@ RUN pnpm run build
 FROM base AS runner
 ENV NODE_ENV=production
 COPY package.json pnpm-lock.yaml ./
+COPY --from=builder /app/.env* ./
 RUN pnpm install --prod --frozen-lockfile
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
