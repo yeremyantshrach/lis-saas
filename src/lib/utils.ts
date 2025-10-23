@@ -23,3 +23,10 @@ export function getInitials(sentence: string): string {
     .join("")
     .toUpperCase();
 }
+
+export function formatRoleLabel(role: string) {
+  return role
+    .split("-")
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
+}

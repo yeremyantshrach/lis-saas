@@ -27,6 +27,7 @@ import {
 import { UserAvatar } from "@/components/user-avatar";
 import { authClient, Session } from "@/lib/auth-client";
 import { FC } from "react";
+import { useRouter } from "next/navigation";
 
 type NavUserProps = {
   user: Session["user"];
@@ -34,7 +35,7 @@ type NavUserProps = {
 
 export const NavUser: FC<NavUserProps> = ({ user }) => {
   const { isMobile } = useSidebar();
-
+  const router = useRouter();
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -84,9 +85,15 @@ export const NavUser: FC<NavUserProps> = ({ user }) => {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => {
-                authClient.signOut();
-              }}
+              onClick={() =>
+                authClient.signOut({
+                  fetchOptions: {
+                    onSuccess: () => {
+                      router.push("/"); // redirect to login page
+                    },
+                  },
+                })
+              }
             >
               <IconLogout />
               Log out

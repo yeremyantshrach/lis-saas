@@ -14,10 +14,18 @@ export function getPostAuthRedirect(session: Awaited<ReturnType<typeof auth.api.
   return orgSlug ? `/${orgSlug}/dashboard` : "/onboarding";
 }
 
-export async function redirectIfAuthenticated() {
+interface RedirectIfAuthenticatedOptions {
+  invitationId?: string;
+}
+
+export async function redirectIfAuthenticated(options?: RedirectIfAuthenticatedOptions) {
   const session = await getServerAuthSession();
 
   if (session?.user) {
+    if (options?.invitationId) {
+      redirect(`/invite/${encodeURIComponent(options.invitationId)}`);
+    }
+
     redirect(getPostAuthRedirect(session));
   }
 

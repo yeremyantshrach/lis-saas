@@ -1,14 +1,14 @@
 import { pgTable, uniqueIndex, pgEnum, text, timestamp, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/relations";
 
-export const labRoleEnum = pgEnum("lab_role_enum", [
+export const organizationRoleEnum = pgEnum("organization_role_enum", [
+  "org-owner",
   "lab-admin",
   "lab-cls",
   "lab-tech",
   "lab-doc",
   "lab-receptionist",
 ]);
-export const organizationRoleEnum = pgEnum("organization_role_enum", ["org-owner"]);
 
 export const account = pgTable(
   "account",
@@ -52,7 +52,8 @@ export const labTeamMember = pgTable(
     id: text("id").primaryKey().notNull(),
     labId: text("lab_id").notNull(),
     userId: text("user_id").notNull(),
-    role: labRoleEnum("role").default("lab-receptionist").notNull(),
+    teamId: text("team_id").notNull(),
+    role: organizationRoleEnum("role").default("lab-receptionist").notNull(),
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
   },
   (table) => [uniqueIndex("lab_team_member_pkey").on(table.id)],
@@ -67,11 +68,7 @@ export const labs = pgTable(
     createdAt: timestamp("created_at", { mode: "string" }).notNull(),
     updatedAt: timestamp("updated_at", { mode: "string" }),
   },
-  (table) => {
-    return {
-      pkey: uniqueIndex("labs_pkey").on(table.id),
-    };
-  },
+  (table) => [uniqueIndex("labs_pkey").on(table.id)],
 );
 
 export const member = pgTable(
@@ -83,11 +80,7 @@ export const member = pgTable(
     role: organizationRoleEnum("role").default("org-owner").notNull(),
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
   },
-  (table) => {
-    return {
-      pkey: uniqueIndex("member_pkey").on(table.id),
-    };
-  },
+  (table) => [uniqueIndex("member_pkey").on(table.id)],
 );
 
 export const organization = pgTable(
@@ -100,12 +93,10 @@ export const organization = pgTable(
     createdAt: timestamp("created_at", { mode: "string" }).notNull(),
     metadata: text("metadata"),
   },
-  (table) => {
-    return {
-      pkey: uniqueIndex("organization_pkey").on(table.id),
-      slugUnique: uniqueIndex("organization_slug_unique").on(table.slug),
-    };
-  },
+  (table) => [
+    uniqueIndex("organization_pkey").on(table.id),
+    uniqueIndex("organization_slug_unique").on(table.slug),
+  ],
 );
 
 export const session = pgTable(
@@ -123,12 +114,10 @@ export const session = pgTable(
     activeOrganizationId: text("active_organization_id"),
     activeTeamId: text("active_team_id"),
   },
-  (table) => {
-    return {
-      pkey: uniqueIndex("session_pkey").on(table.id),
-      tokenUnique: uniqueIndex("session_token_unique").on(table.token),
-    };
-  },
+  (table) => [
+    uniqueIndex("session_pkey").on(table.id),
+    uniqueIndex("session_token_unique").on(table.token),
+  ],
 );
 
 export const user = pgTable(
@@ -146,12 +135,10 @@ export const user = pgTable(
     banReason: text("ban_reason"),
     banExpires: timestamp("ban_expires", { mode: "string" }),
   },
-  (table) => {
-    return {
-      emailUnique: uniqueIndex("user_email_unique").on(table.email),
-      pkey: uniqueIndex("user_pkey").on(table.id),
-    };
-  },
+  (table) => [
+    uniqueIndex("user_email_unique").on(table.email),
+    uniqueIndex("user_pkey").on(table.id),
+  ],
 );
 
 export const verification = pgTable(
@@ -164,11 +151,7 @@ export const verification = pgTable(
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
   },
-  (table) => {
-    return {
-      pkey: uniqueIndex("verification_pkey").on(table.id),
-    };
-  },
+  (table) => [uniqueIndex("verification_pkey").on(table.id)],
 );
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {

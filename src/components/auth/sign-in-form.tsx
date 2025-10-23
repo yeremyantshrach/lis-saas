@@ -14,7 +14,11 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export function SignInForm({ className, ...props }: ComponentProps<"div">) {
+interface SignInFormProps extends ComponentProps<"div"> {
+  invitationId?: string;
+}
+
+export function SignInForm({ className, invitationId, ...props }: SignInFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -48,12 +52,17 @@ export function SignInForm({ className, ...props }: ComponentProps<"div">) {
         // Show error toast
         toast.error(result.message || "Failed to sign in");
       } else {
-        // Show success toast
         toast.success(result.message || "Signed in successfully!");
 
-        // Redirect to dashboard after successful signin
+        if (invitationId) {
+          router.push(`/invite/${encodeURIComponent(invitationId)}`);
+          return;
+        }
+
         if (result.redirectUrl) {
-          window.location.href = result.redirectUrl;
+          router.push(result.redirectUrl);
+        } else {
+          router.refresh();
         }
       }
     });
@@ -117,7 +126,14 @@ export function SignInForm({ className, ...props }: ComponentProps<"div">) {
                 </Button>
                 <FieldDescription className="text-center">
                   Don&apos;t have an account?{" "}
-                  <Link href="/sign-up" className="underline underline-offset-4 hover:text-primary">
+                  <Link
+                    href={
+                      invitationId
+                        ? `/sign-up?invitationId=${encodeURIComponent(invitationId)}`
+                        : "/sign-up"
+                    }
+                    className="underline underline-offset-4 hover:text-primary"
+                  >
                     Sign up
                   </Link>
                 </FieldDescription>

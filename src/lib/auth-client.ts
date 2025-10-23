@@ -36,9 +36,16 @@ export const authClient = createAuthClient({
         enabled: true,
       },
     }),
-    inferAdditionalFields<typeof auth>(),
     customSessionClient<typeof auth>(),
+    inferAdditionalFields<typeof auth>({
+      user: {
+        role: {
+          type: "string",
+        },
+      },
+    }),
   ],
 });
 
 export type Session = typeof authClient.$Infer.Session;
+export type Lab = typeof authClient.$Infer.Team;

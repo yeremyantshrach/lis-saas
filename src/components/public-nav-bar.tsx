@@ -24,6 +24,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { IconLogout, IconDashboard } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
 
 // Simple logo component for the navbar
 const Logo = (props: React.SVGAttributes<SVGElement>) => {
@@ -132,6 +133,7 @@ export const PublicNavBar = React.forwardRef<HTMLElement, PublicNavBarProps>(
     const isMobile = useIsMobile();
     const containerRef = useRef<HTMLElement>(null);
     const { data: session, isPending } = authClient.useSession();
+    const router = useRouter();
 
     // Combine refs
     const combinedRef = React.useCallback(
@@ -246,7 +248,18 @@ export const PublicNavBar = React.forwardRef<HTMLElement, PublicNavBarProps>(
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => authClient.signOut()} className="cursor-pointer">
+                <DropdownMenuItem
+                  onClick={() =>
+                    authClient.signOut({
+                      fetchOptions: {
+                        onSuccess: () => {
+                          router.push("/"); // redirect to login page
+                        },
+                      },
+                    })
+                  }
+                  className="cursor-pointer"
+                >
                   <IconLogout />
                   Sign out
                 </DropdownMenuItem>

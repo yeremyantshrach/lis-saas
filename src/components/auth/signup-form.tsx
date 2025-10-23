@@ -13,7 +13,11 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export function SignupForm({ className, ...props }: ComponentProps<"div">) {
+interface SignupFormProps extends ComponentProps<"div"> {
+  invitationId?: string;
+}
+
+export function SignupForm({ className, invitationId, ...props }: SignupFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const {
@@ -43,13 +47,18 @@ export function SignupForm({ className, ...props }: ComponentProps<"div">) {
         // Show error toast
         toast.error(result.message || "Failed to create account");
       } else {
-        // Show success toast
         toast.success(result.message || "Account created successfully!");
-        // Redirect to sign-in page after successful signup
-        router.push("/sign-in");
+        const target = invitationId
+          ? `/sign-in?invitationId=${encodeURIComponent(invitationId)}`
+          : "/sign-in";
+        router.push(target);
       }
     });
   };
+  const signInHref = invitationId
+    ? `/sign-in?invitationId=${encodeURIComponent(invitationId)}`
+    : "/sign-in";
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -135,7 +144,10 @@ export function SignupForm({ className, ...props }: ComponentProps<"div">) {
                 </Button>
                 <FieldDescription className="text-center">
                   Already have an account?{" "}
-                  <Link href="/sign-in" className="underline underline-offset-4 hover:text-primary">
+                  <Link
+                    href={signInHref}
+                    className="underline underline-offset-4 hover:text-primary"
+                  >
                     Sign in
                   </Link>
                 </FieldDescription>

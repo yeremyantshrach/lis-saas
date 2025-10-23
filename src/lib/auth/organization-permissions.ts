@@ -32,6 +32,7 @@ export const orgOwner = organizationAccessControl.newRole({
   labOrders: ["read", "create", "update", "delete"],
   labResults: ["read", "create", "update", "delete"],
   labPatients: ["read", "create", "update", "delete"],
+
   ...ownerAc.statements,
 });
 
@@ -40,6 +41,7 @@ export const labAdmin = organizationAccessControl.newRole({
   labOrders: ["read", "create", "update", "delete"],
   labResults: ["read", "create", "update", "delete"],
   labPatients: ["read", "create", "update", "delete"],
+
   ...adminAc.statements,
 });
 
@@ -64,3 +66,12 @@ export const labReceptionist = organizationAccessControl.newRole({
   labOrders: ["read", "create"],
   labPatients: ["read", "create"],
 });
+
+export const organizationRoles = {
+  "org-owner": orgOwner,
+  "lab-admin": labAdmin,
+  "lab-cls": labCls,
+  "lab-tech": labTech,
+  "lab-doctor": labDoctor,
+  "lab-receptionist": labReceptionist,
+};
