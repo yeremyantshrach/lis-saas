@@ -1,0 +1,66 @@
+{
+  "name": "q_ide_default",
+  "description": "Default agent configuration",
+  "prompt": "",
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "disabled": false,
+      "timeout": 60000,
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "shadcn": {
+      "command": "npx",
+      "disabled": false,
+      "timeout": 60000,
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
+    },
+    "better-auth": {
+      "url": "https://mcp.chonkie.ai/better-auth/better-auth-builder/mcp",
+      "disabled": false,
+      "timeout": 60000
+    }
+  },
+  "tools": [
+    "fs_read",
+    "execute_bash",
+    "fs_write",
+    "report_issue",
+    "use_aws",
+    "@context7",
+    "@shadcn",
+    "@better-auth"
+  ],
+  "toolAliases": {},
+  "allowedTools": [
+    "fs_read",
+    "report_issue",
+    "use_aws",
+    "execute_bash",
+    "fs_write"
+  ],
+  "toolsSettings": {
+    "use_aws": {
+      "preset": "readOnly"
+    },
+    "execute_bash": {
+      "preset": "readOnly"
+    }
+  },
+  "resources": [
+    "file://AmazonQ.md",
+    "file://README.md",
+    "file://.amazonq/rules/**/*.md"
+  ],
+  "hooks": {
+    "agentSpawn": [],
+    "userPromptSubmit": []
+  },
+  "useLegacyMcpJson": true
+}
