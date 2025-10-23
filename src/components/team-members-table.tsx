@@ -39,8 +39,14 @@ const joinedFormatter = new Intl.DateTimeFormat("en", {
 export interface OrganizationMemberWithUser {
   id: string;
   role: string;
+  userId?: string;
+  team?: {
+    id: string;
+    name: string;
+  } | null;
   createdAt?: string | Date | null;
   user: {
+    id?: string;
     name?: string | null;
     email: string;
   };
@@ -122,6 +128,13 @@ export function TeamMembersTable({ members }: TeamMembersTableProps) {
           </div>
         );
       },
+    },
+    {
+      id: "team",
+      header: "Team",
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">{row.original.team?.name ?? "—"}</span>
+      ),
     },
     {
       accessorKey: "role",

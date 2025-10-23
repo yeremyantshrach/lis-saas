@@ -10,11 +10,12 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { IconFlask, IconUsers, IconUserPlus } from "@tabler/icons-react";
-import { db } from "@/lib/database";
+import { db, schema } from "@/lib/database";
 import { tryCatch } from "@/lib/try-catch";
 import { formatRoleLabel } from "@/lib/utils";
-import { TeamMembersTable } from "@/components/team-members-table";
+import { OrganizationMemberWithUser, TeamMembersTable } from "@/components/team-members-table";
 import { InvitationsTable } from "@/components/invitations-table";
+import { and, eq, inArray } from "drizzle-orm";
 
 interface LabsPageProps {
   params: Promise<{ orgSlug: string }>;
@@ -47,6 +48,7 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
   const canManageLabs = canUpdateLabs || canDeleteLabs;
 
   const allLabs = Array.isArray(labsResponse) ? labsResponse : [];
+  const organizationId = session.session?.activeOrganizationId ?? null;
 
   let activeOrg: Awaited<ReturnType<typeof auth.api.getFullOrganization>> | null = null;
   if (canViewMembers) {
@@ -58,20 +60,51 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
     activeOrg = orgResult ?? null;
   }
   const collator = new Intl.Collator("en", { sensitivity: "base" });
-  const members = activeOrg?.members
-    ? [...activeOrg.members].sort((a, b) =>
-        collator.compare(a.user.name || a.user.email, b.user.name || b.user.email),
-      )
-    : [];
-  const uniqueRoles = members.length
-    ? [...new Set(members.map((member) => formatRoleLabel(member.role)))]
+
+  const teamIds = allLabs.map((lab) => lab.id);
+  const labTeamMemberships =
+    teamIds.length > 0 && organizationId
+      ? await db
+          .select({
+            userId: schema.labTeamMember.userId,
+            teamId: schema.labTeamMember.teamId,
+            labName: schema.labs.name,
+          })
+          .from(schema.labTeamMember)
+          .innerJoin(schema.labs, eq(schema.labs.id, schema.labTeamMember.labId))
+          .where(
+            and(
+              eq(schema.labs.organizationId, organizationId),
+              inArray(schema.labTeamMember.labId, teamIds),
+            ),
+          )
+      : [];
+  const memberTeamsByUserId = new Map<string, { id: string; name: string }>();
+  for (const membership of labTeamMemberships) {
+    memberTeamsByUserId.set(membership.userId, {
+      id: membership.teamId,
+      name: membership.labName ?? "Lab",
+    });
+  }
+  const allMembers: OrganizationMemberWithUser[] = activeOrg?.members
+    ? activeOrg.members
+        .map((member) => {
+          const userId = member.userId ?? "";
+          const team = userId ? (memberTeamsByUserId.get(userId) ?? null) : null;
+          return {
+            ...member,
+            team,
+          } as OrganizationMemberWithUser;
+        })
+        .sort((a, b) => collator.compare(a.user.name || a.user.email, b.user.name || b.user.email))
     : [];
 
   const activeTeamId = session.session?.activeTeamId ?? null;
   const currentUserId = session.user.id;
   const currentMember =
-    members.find((member) => {
-      return member.userId === currentUserId;
+    allMembers.find((member) => {
+      const memberUserId = member.userId ?? member.user?.id;
+      return memberUserId === currentUserId;
     }) ?? null;
 
   let visibleLabs = allLabs;
@@ -79,7 +112,15 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
     visibleLabs = allLabs.filter((lab) => lab.id === activeTeamId);
   }
 
-  const organizationId = session.session?.activeOrganizationId;
+  const visibleMembers: OrganizationMemberWithUser[] =
+    activeTeamId && currentMember?.role === "lab-admin"
+      ? allMembers.filter((member) => member.team?.id === activeTeamId)
+      : allMembers;
+
+  const uniqueRoles = visibleMembers.length
+    ? [...new Set(visibleMembers.map((member) => formatRoleLabel(member.role)))]
+    : [];
+
   const pendingInvitations =
     canInvite && organizationId
       ? await db.query.invitation.findMany({
@@ -131,7 +172,7 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
               <IconUsers className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-semibold">{members.length}</div>
+              <div className="text-2xl font-semibold">{visibleMembers.length}</div>
               <CardDescription>
                 {uniqueRoles.length ? uniqueRoles.join(" · ") : "Roles assigned per member"}
               </CardDescription>
@@ -182,7 +223,7 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <TeamMembersTable members={members} />
+                <TeamMembersTable members={visibleMembers} />
               </CardContent>
             </Card>
           </TabsContent>

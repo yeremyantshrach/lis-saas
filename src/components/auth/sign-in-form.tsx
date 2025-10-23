@@ -60,7 +60,7 @@ export function SignInForm({ className, invitationId, ...props }: SignInFormProp
         }
 
         if (result.redirectUrl) {
-          router.push(result.redirectUrl);
+          router.replace(result.redirectUrl);
         } else {
           router.refresh();
         }
