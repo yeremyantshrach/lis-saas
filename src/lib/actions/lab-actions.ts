@@ -1,63 +1,52 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
 import { requirePermission } from "@/lib/server-permissions";
-import { headers } from "next/headers";
 import { createLabSchema, inviteSchema } from "../validations/labs";
+import { safeCreateTeam, safeCreateInvitation } from "@/lib/helpers/auth-helpers";
+import {
+  createSuccessResult,
+  createErrorResult,
+  revalidateOrgPaths,
+  type ActionResult,
+} from "@/lib/helpers/action-helpers";
 
-export async function createLabAction(data: z.infer<typeof createLabSchema>) {
+export async function createLabAction(
+  data: z.infer<typeof createLabSchema>,
+): Promise<ActionResult> {
   const { session } = await requirePermission("team:create");
 
-  try {
-    const result = await auth.api.createTeam({
-      body: {
-        name: data.name,
-        organizationId: session.session?.activeOrganizationId as string,
-      },
-      headers: await headers(),
-    });
+  const [result, error] = await safeCreateTeam(
+    data.name,
+    session.session?.activeOrganizationId as string,
+  );
 
-    revalidatePath("/[orgSlug]/labs", "page");
-    return { success: true, data: result };
-  } catch (error) {
-    console.log(error);
-    return { success: false, error: "Failed to create lab" };
+  if (error) {
+    return createErrorResult("Failed to create lab");
   }
+
+  revalidateOrgPaths();
+  return createSuccessResult(result);
 }
 
-export async function inviteToOrgAction(data: z.infer<typeof inviteSchema>) {
+export async function inviteToOrgAction(data: z.infer<typeof inviteSchema>): Promise<ActionResult> {
   const { session } = await requirePermission("team:invite");
   const activeTeamId = session.session?.activeTeamId ?? null;
 
-  try {
-    if (activeTeamId && data.teamId !== activeTeamId) {
-      return { success: false, error: "You can only invite members to your assigned lab." };
-    }
-
-    // Placeholder - needs proper Better Auth organization plugin setup
-    const body = {
-        email: data.email,
-        role: data.role,
-        teamId: activeTeamId ?? data.teamId,
-        organizationId: session.session?.activeOrganizationId as string,
-      };
-      console.log('body', body)
-    const result = await auth.api.createInvitation({
-      body: {
-        email: data.email,
-        role: data.role,
-        teamId: activeTeamId ?? data.teamId,
-        organizationId: session.session?.activeOrganizationId as string,
-      },
-      headers: await headers(),
-    });
-
-    revalidatePath("/[orgSlug]/labs", "page");
-    return { success: true, data: result };
-  } catch (error) {
-    console.log("error", JSON.stringify(error));
-    return { success: false, error: "Failed to send invitation" };
+  if (activeTeamId && data.teamId !== activeTeamId) {
+    return createErrorResult("You can only invite members to your assigned lab.");
   }
+
+  const [result, error] = await safeCreateInvitation(
+    data.email,
+    data.role,
+    activeTeamId ?? data.teamId,
+    session.session?.activeOrganizationId as string,
+  );
+  if (error) {
+    return createErrorResult("Failed to send invitation");
+  }
+
+  revalidateOrgPaths();
+  return createSuccessResult(result);
 }

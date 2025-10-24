@@ -1,17 +1,11 @@
-import { db } from "@/lib/database";
-import { organization } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { safeGetOrganizationBySlug, safeGetOrganizationById } from "@/lib/helpers/db-helpers";
 
 export const getOrganizationBySlug = async (slug: string) => {
-  const org = await db.query.organization.findFirst({
-    where: eq(organization.slug, slug),
-  });
-  return org || null;
+  const [org, error] = await safeGetOrganizationBySlug(slug);
+  return error ? null : org || null;
 };
 
 export const getOrganizationById = async (id: string) => {
-  const org = await db.query.organization.findFirst({
-    where: eq(organization.id, id),
-  });
-  return org || null;
+  const [org, error] = await safeGetOrganizationById(id);
+  return error ? null : org || null;
 };

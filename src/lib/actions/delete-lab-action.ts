@@ -1,23 +1,26 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
 import { requirePermission } from "@/lib/server-permissions";
-import { headers } from "next/headers";
+import { safeRemoveTeam } from "@/lib/helpers/auth-helpers";
+import {
+  createSuccessResult,
+  createErrorResult,
+  revalidateOrgPaths,
+  type ActionResult,
+} from "@/lib/helpers/action-helpers";
 
-export async function deleteLabAction(labId: string, organizationId: string) {
+export async function deleteLabAction(
+  labId: string,
+  organizationId: string,
+): Promise<ActionResult> {
   await requirePermission("team:delete");
 
-  try {
-    const result = await auth.api.removeTeam({
-      body: { organizationId, teamId: labId },
-      headers: await headers(),
-    });
+  const [result, error] = await safeRemoveTeam(organizationId, labId);
 
-    revalidatePath("/[orgSlug]/labs", "page");
-    return { success: true, data: result };
-  } catch (error) {
-    console.log("error", error);
-    return { success: false, error: "Failed to remove lab" };
+  if (error) {
+    return createErrorResult("Failed to remove lab");
   }
+
+  revalidateOrgPaths();
+  return createSuccessResult(result);
 }

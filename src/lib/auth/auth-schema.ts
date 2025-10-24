@@ -4,8 +4,8 @@ export const organizationRoleEnum = pgEnum("organization_role_enum", [
   "org-owner",
   "lab-admin",
   "lab-cls",
-  "lab-tech",
-  "lab-doc",
+  "lab-technician",
+  "lab-doctor",
   "lab-receptionist",
 ]);
 

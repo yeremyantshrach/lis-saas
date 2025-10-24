@@ -11,7 +11,7 @@ import { db, schema } from "./database";
 import { env } from "./env";
 import { slugify } from "./utils";
 import { organizationAccessControl, organizationRoles } from "@/lib/auth/organization-permissions";
-import { create } from "domain";
+import { tryCatch } from "./try-catch";
 
 const stripeClient = new Stripe(env.stripe.secretKey, {
   apiVersion: "2025-08-27.basil",
@@ -41,15 +41,20 @@ const options = {
     session: {
       create: {
         before: async (session) => {
-          const [userOrg, userTeam] = await Promise.all([
-            db.query.member.findFirst({
-              where: (member, { eq }) => eq(member.userId, session.userId),
-              with: { organization: true },
-            }),
-            db.query.labTeamMember.findFirst({
-              where: (labTeamMember, { eq }) => eq(labTeamMember.userId, session.userId),
-            }),
-          ]);
+          const [results, error] = await tryCatch(
+            Promise.all([
+              db.query.member.findFirst({
+                where: (member, { eq }) => eq(member.userId, session.userId),
+                with: { organization: true },
+              }),
+              db.query.labTeamMember.findFirst({
+                where: (labTeamMember, { eq }) => eq(labTeamMember.userId, session.userId),
+              }),
+            ]),
+          );
+
+          const [userOrg, userTeam] = error ? [null, null] : results;
+
           return {
             data: {
               ...session,
@@ -144,16 +149,21 @@ export const auth = betterAuth({
   plugins: [
     ...options.plugins,
     customSession(async ({ session, user }) => {
-      const [userOrg, userTeam] = await Promise.all([
-        db.query.member.findFirst({
-          where: (member, { eq }) => eq(member.userId, session.userId),
-          with: { organization: true },
-        }),
-        db.query.labTeamMember.findFirst({
-          where: (labTeamMember, { eq }) => eq(labTeamMember.userId, session.userId),
-          columns: { labId: true },
-        }),
-      ]);
+      const [results, error] = await tryCatch(
+        Promise.all([
+          db.query.member.findFirst({
+            where: (member, { eq }) => eq(member.userId, session.userId),
+            with: { organization: true },
+          }),
+          db.query.labTeamMember.findFirst({
+            where: (labTeamMember, { eq }) => eq(labTeamMember.userId, session.userId),
+            columns: { labId: true },
+          }),
+        ]),
+      );
+
+      const [userOrg, userTeam] = error ? [null, null] : results;
+
       return {
         user,
         session: {
@@ -169,3 +179,4 @@ export const auth = betterAuth({
 export type Auth = typeof auth;
 export type AuthSession = typeof auth.$Infer.Session;
 export type Organization = typeof auth.$Infer.Organization;
+export type Invitation = typeof auth.$Infer.Invitation;

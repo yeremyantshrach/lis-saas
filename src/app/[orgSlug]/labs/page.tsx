@@ -10,12 +10,11 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { IconFlask, IconUsers, IconUserPlus } from "@tabler/icons-react";
-import { db, schema } from "@/lib/database";
+import { safeGetLabTeamMemberships, safeFindPendingInvitations } from "@/lib/helpers/db-helpers";
 import { tryCatch } from "@/lib/try-catch";
 import { formatRoleLabel } from "@/lib/utils";
 import { OrganizationMemberWithUser, TeamMembersTable } from "@/components/team-members-table";
 import { InvitationsTable } from "@/components/invitations-table";
-import { and, eq, inArray } from "drizzle-orm";
 
 interface LabsPageProps {
   params: Promise<{ orgSlug: string }>;
@@ -62,25 +61,12 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
   }
 
   const labIds = allLabs.map((lab) => lab.id);
-  const labTeamMemberships =
+  const [labTeamMemberships] =
     labIds.length > 0 && organizationId
-      ? await db
-          .select({
-            userId: schema.labTeamMember.userId,
-            labId: schema.labTeamMember.labId,
-            labName: schema.labs.name,
-          })
-          .from(schema.labTeamMember)
-          .innerJoin(schema.labs, eq(schema.labs.id, schema.labTeamMember.labId))
-          .where(
-            and(
-              eq(schema.labs.organizationId, organizationId),
-              inArray(schema.labTeamMember.labId, labIds),
-            ),
-          )
-      : [];
+      ? await safeGetLabTeamMemberships(organizationId, labIds)
+      : [[]];
   const memberTeamsByUserId = new Map<string, { id: string; name: string }>();
-  for (const membership of labTeamMemberships) {
+  for (const membership of labTeamMemberships ?? []) {
     memberTeamsByUserId.set(membership.userId, {
       id: membership.labId,
       name: membership.labName,
@@ -116,23 +102,14 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
     ? [...new Set(visibleMembers.map((member) => formatRoleLabel(member.role)))]
     : [];
 
-  const pendingInvitations =
-    canInvite && organizationId
-      ? await db.query.invitation.findMany({
-          where: (invitation, { and, eq }) =>
-            and(eq(invitation.organizationId, organizationId), eq(invitation.status, "pending")),
-          with: {
-            lab: true,
-          },
-          orderBy: (invitation, { desc }) => [desc(invitation.createdAt)],
-        })
-      : [];
+  const [pendingInvitations] =
+    canInvite && organizationId ? await safeFindPendingInvitations(organizationId) : [[]];
   const filteredPendingInvitations =
     isOrgOwner && activeLabId
-      ? pendingInvitations.filter(
+      ? (pendingInvitations ?? []).filter(
           (invitation) => (invitation.labId ?? invitation.lab?.id) === activeLabId,
         )
-      : pendingInvitations;
+      : (pendingInvitations ?? []);
 
   const allowedTabs = ["labs"];
   if (canViewMembers) {

@@ -1,31 +1,26 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { safeGetSession, safeAcceptInvitation } from "@/lib/helpers/auth-helpers";
+import {
+  createSuccessResult,
+  createErrorResult,
+  revalidateOrgPaths,
+  type ActionResult,
+} from "@/lib/helpers/action-helpers";
 
-export async function acceptInvitationAction(invitationId: string) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+export async function acceptInvitationAction(invitationId: string): Promise<ActionResult> {
+  const [session, sessionError] = await safeGetSession();
 
-  if (!session?.user) {
-    return { success: false, error: "You must be signed in to accept an invitation." };
+  if (sessionError || !session?.user) {
+    return createErrorResult("You must be signed in to accept an invitation.");
   }
 
-  try {
-    const result = await auth.api.acceptInvitation({
-      body: { invitationId },
-      headers: await headers(),
-    });
+  const [result, error] = await safeAcceptInvitation(invitationId);
 
-    // Revalidate dashboard and labs layouts for any organization slugs using dynamic segments.
-    revalidatePath("/[orgSlug]/dashboard", "page");
-    revalidatePath("/[orgSlug]/labs", "page");
-
-    return { success: true, data: result };
-  } catch (error) {
-    console.log("Failed to accept invitation", error);
-    return { success: false, error: "Failed to accept invitation." };
+  if (error) {
+    return createErrorResult("Failed to accept invitation.");
   }
+
+  revalidateOrgPaths();
+  return createSuccessResult(result);
 }

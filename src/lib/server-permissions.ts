@@ -1,18 +1,15 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/database";
 import type { Permission } from "./permissions";
+import { safeGetUserMember } from "@/lib/helpers/db-helpers";
+import { safeGetSession } from "@/lib/helpers/auth-helpers";
 
 export async function requirePermission(permission: Permission, redirectTo?: string) {
-  const session = await auth.api.getSession({
-    headers: await import("next/headers").then((m) => m.headers()),
-  });
+  const [session, sessionError] = await safeGetSession();
 
-  if (!session?.user) {
+  if (sessionError || !session?.user) {
     redirect("/sign-in");
   }
 
-  // App-level admin has all permissions
   if (session.user.role === "admin") {
     return { session, hasPermission: true };
   }
@@ -21,16 +18,12 @@ export async function requirePermission(permission: Permission, redirectTo?: str
     redirect("/onboarding");
   }
 
-  // Get user's role in the active organization
-  const userMember = await db.query.member.findFirst({
-    where: (member, { and, eq }) =>
-      and(
-        eq(member.userId, session.user.id),
-        eq(member.organizationId, session.session.activeOrganizationId!),
-      ),
-  });
+  const [userMember, memberError] = await safeGetUserMember(
+    session.user.id,
+    session.session.activeOrganizationId,
+  );
 
-  if (!userMember) {
+  if (memberError || !userMember) {
     redirect(redirectTo || "/unauthorized");
   }
 
@@ -44,23 +37,18 @@ export async function requirePermission(permission: Permission, redirectTo?: str
 }
 
 export async function checkPermission(permission: Permission): Promise<boolean> {
-  const session = await auth.api.getSession({
-    headers: await import("next/headers").then((m) => m.headers()),
-  });
+  const [session, sessionError] = await safeGetSession();
 
-  if (!session?.user) return false;
+  if (sessionError || !session?.user) return false;
   if (session.user.role === "admin") return true;
   if (!session.session?.activeOrganizationId) return false;
 
-  const userMember = await db.query.member.findFirst({
-    where: (member, { and, eq }) =>
-      and(
-        eq(member.userId, session.user.id),
-        eq(member.organizationId, session.session.activeOrganizationId!),
-      ),
-  });
+  const [userMember, memberError] = await safeGetUserMember(
+    session.user.id,
+    session.session.activeOrganizationId,
+  );
 
-  if (!userMember) return false;
+  if (memberError || !userMember) return false;
   return checkRolePermission(userMember.role, permission);
 }
 

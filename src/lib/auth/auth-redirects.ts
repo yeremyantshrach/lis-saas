@@ -1,12 +1,10 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { safeGetSession } from "@/lib/helpers/auth-helpers";
 import { auth } from "@/lib/auth";
 
 export async function getServerAuthSession() {
-  const headerList = await headers();
-  return auth.api.getSession({
-    headers: headerList,
-  });
+  const [session, error] = await safeGetSession();
+  return error ? null : session;
 }
 
 export function getPostAuthRedirect(session: Awaited<ReturnType<typeof auth.api.getSession>>) {
