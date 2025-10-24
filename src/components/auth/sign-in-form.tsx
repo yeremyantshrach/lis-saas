@@ -14,17 +14,19 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, KeyRound } from "lucide-react";
 
 interface SignInFormProps extends ComponentProps<"div"> {
   invitationId?: string;
   isEmailVerified?: boolean;
+  passwordResetSuccess?: boolean;
 }
 
 export function SignInForm({
   className,
   invitationId,
   isEmailVerified,
+  passwordResetSuccess,
   ...props
 }: SignInFormProps) {
   const [isPending, startTransition] = useTransition();
@@ -87,14 +89,27 @@ export function SignInForm({
           <CardDescription>Enter your email below to login to your account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isEmailVerified && (
-            <Alert>
-              <CheckCircle2 className="text-emerald-600" />
-              <AlertTitle>Email verified</AlertTitle>
-              <AlertDescription>
-                Your email address is confirmed. You can sign in with your credentials below.
-              </AlertDescription>
-            </Alert>
+          {(isEmailVerified || passwordResetSuccess) && (
+            <div className="space-y-3">
+              {isEmailVerified && (
+                <Alert>
+                  <CheckCircle2 className="text-emerald-600" />
+                  <AlertTitle>Email verified</AlertTitle>
+                  <AlertDescription>
+                    Your email address is confirmed. You can sign in with your credentials below.
+                  </AlertDescription>
+                </Alert>
+              )}
+              {passwordResetSuccess && (
+                <Alert>
+                  <KeyRound className="text-primary" />
+                  <AlertTitle>Password updated</AlertTitle>
+                  <AlertDescription>
+                    Your password was reset successfully. Use the form below to access your account.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
           )}
           <form onSubmit={handleSubmit(onSubmit)}>
             <FieldGroup>

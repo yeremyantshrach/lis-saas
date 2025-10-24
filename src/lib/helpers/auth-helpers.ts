@@ -95,3 +95,22 @@ export async function safeSendVerificationEmail(email: string) {
     }),
   );
 }
+
+export async function safeRequestPasswordReset(email: string) {
+  return tryCatch(
+    auth.api.requestPasswordReset({
+      body: {
+        email,
+        redirectTo: `${env.betterAuth.baseURL}/reset-password`,
+      },
+    }),
+  );
+}
+
+export async function safeResetPassword(token: string, newPassword: string) {
+  return tryCatch(
+    auth.api.resetPassword({
+      body: { token, newPassword },
+    }),
+  );
+}
