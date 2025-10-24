@@ -45,9 +45,16 @@ export function SignupForm({ className, invitationId, ...props }: SignupFormProp
           });
         }
         // Show error toast
-        toast.error(result.message || "Failed to create account");
+        toast.error(result.error || "Failed to create account");
+        if (result.redirectUrl) {
+          router.push(result.redirectUrl);
+        }
       } else {
         toast.success(result.message || "Account created successfully!");
+        if (result.redirectUrl) {
+          router.push(result.redirectUrl);
+          return;
+        }
         const target = invitationId
           ? `/sign-in?invitationId=${encodeURIComponent(invitationId)}`
           : "/sign-in";

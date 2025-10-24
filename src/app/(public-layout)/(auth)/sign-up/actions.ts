@@ -2,8 +2,8 @@
 
 import { signupSchema, type SignupFormData } from "@/lib/validations/auth";
 import { APIError } from "better-auth/api";
-import { ZodError } from "zod";
-import { safeSignUpEmail } from "@/lib/helpers/auth-helpers";
+import { ZodError, z } from "zod";
+import { safeSendVerificationEmail, safeSignUpEmail } from "@/lib/helpers/auth-helpers";
 import {
   createSuccessResult,
   createErrorResult,
@@ -14,7 +14,7 @@ export async function signupAction(data: SignupFormData): Promise<ActionResult> 
   try {
     const validatedData = signupSchema.parse(data);
 
-    const [result, authError] = await safeSignUpEmail(
+    const [, authError] = await safeSignUpEmail(
       validatedData.email,
       validatedData.password,
       validatedData.name,
@@ -26,12 +26,32 @@ export async function signupAction(data: SignupFormData): Promise<ActionResult> 
       );
     }
 
-    return createSuccessResult(result, "Account created successfully!");
+    const [verificationResult, verificationError] = await safeSendVerificationEmail(
+      validatedData.email,
+    );
+
+    const verificationUrl = `/verify-email?email=${encodeURIComponent(validatedData.email)}`;
+
+    if (verificationError) {
+      return createErrorResult(
+        verificationError instanceof APIError
+          ? verificationError.message
+          : "Failed to send verification email",
+        undefined,
+        verificationUrl,
+      );
+    }
+
+    return createSuccessResult(
+      verificationResult,
+      "Account created successfully!",
+      verificationUrl,
+    );
   } catch (error) {
     if (error instanceof ZodError) {
       return createErrorResult(
         "Validation failed",
-        error.flatten().fieldErrors as Record<string, string[]>,
+        z.flattenError(error).fieldErrors as Record<string, string[]>,
       );
     }
     return createErrorResult(

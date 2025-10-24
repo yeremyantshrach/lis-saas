@@ -22,11 +22,16 @@ export function createSuccessResult<T>(
   };
 }
 
-export function createErrorResult(error: string, errors?: Record<string, string[]>): ActionResult {
+export function createErrorResult(
+  error: string,
+  errors?: Record<string, string[]>,
+  redirectUrl?: string,
+): ActionResult {
   return {
     success: false,
     error,
     ...(errors && { errors }),
+    ...(redirectUrl && { redirectUrl }),
   };
 }
 

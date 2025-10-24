@@ -29,3 +29,9 @@ export const signupSchema = z
   });
 
 export type SignupFormData = z.infer<typeof signupSchema>;
+
+export const resendVerificationSchema = z.object({
+  email: z.email("Please enter a valid email address"),
+});
+
+export type ResendVerificationFormData = z.infer<typeof resendVerificationSchema>;

@@ -13,12 +13,20 @@ import { signinAction } from "@/app/(public-layout)/(auth)/sign-in/actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle2 } from "lucide-react";
 
 interface SignInFormProps extends ComponentProps<"div"> {
   invitationId?: string;
+  isEmailVerified?: boolean;
 }
 
-export function SignInForm({ className, invitationId, ...props }: SignInFormProps) {
+export function SignInForm({
+  className,
+  invitationId,
+  isEmailVerified,
+  ...props
+}: SignInFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -48,9 +56,11 @@ export function SignInForm({ className, invitationId, ...props }: SignInFormProp
             }
           });
         }
-
         // Show error toast
-        toast.error(result.message || "Failed to sign in");
+        toast.error(result.error || "Failed to sign in");
+        if (result.redirectUrl) {
+          router.push(result.redirectUrl);
+        }
       } else {
         toast.success(result.message || "Signed in successfully!");
 
@@ -76,7 +86,16 @@ export function SignInForm({ className, invitationId, ...props }: SignInFormProp
           <CardTitle>Login to your account</CardTitle>
           <CardDescription>Enter your email below to login to your account</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          {isEmailVerified && (
+            <Alert>
+              <CheckCircle2 className="text-emerald-600" />
+              <AlertTitle>Email verified</AlertTitle>
+              <AlertDescription>
+                Your email address is confirmed. You can sign in with your credentials below.
+              </AlertDescription>
+            </Alert>
+          )}
           <form onSubmit={handleSubmit(onSubmit)}>
             <FieldGroup>
               <Field>
@@ -121,9 +140,6 @@ export function SignInForm({ className, invitationId, ...props }: SignInFormProp
               <Field>
                 <Button type="submit" className="w-full" disabled={isPending}>
                   {isPending ? "Signing in..." : "Login"}
-                </Button>
-                <Button variant="outline" type="button" className="w-full" disabled={isPending}>
-                  Login with Google
                 </Button>
                 <FieldDescription className="text-center">
                   Don&apos;t have an account?{" "}

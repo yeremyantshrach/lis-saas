@@ -26,8 +26,30 @@ const options = {
   appName: "LIS",
   baseURL: env.betterAuth.baseURL,
   secret: env.betterAuth.secret,
+  emailVerification: {
+    expiresIn: 1000,
+    sendVerificationEmail: async ({ user, url, token }) => {
+      console.log("sendVerificationEmail url", url);
+      console.log("sendVerificationEmail token", token);
+      console.log("sendVerificationEmail user", user);
+    },
+    onEmailVerification: async (user) => {
+      console.log("onEmailVerification", user);
+    },
+    afterEmailVerification: async (user) => {
+      console.log("afterEmailVerification", user);
+    },
+  },
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
+    autoSignIn: false,
+    sendResetPassword: async ({ user, url, token }) => {
+      console.log("url", url);
+      console.log(
+        `Send reset password email to ${user.email} with link: ${env.betterAuth.baseURL}/reset-password?token=${token}`,
+      );
+    },
   },
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -85,6 +107,7 @@ const options = {
           };
         },
       },
+      requireEmailVerificationOnInvitation: true,
       async sendInvitationEmail({ id }) {
         console.log("Send invitation url", `${env.betterAuth.baseURL}/invite/${id}`);
       },

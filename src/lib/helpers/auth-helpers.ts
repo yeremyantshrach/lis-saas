@@ -1,6 +1,7 @@
 import { auth, Invitation } from "@/lib/auth";
 import { tryCatch } from "@/lib/try-catch";
 import { headers } from "next/headers";
+import { env } from "@/lib/env";
 
 export async function safeGetSession() {
   return tryCatch(
@@ -81,6 +82,16 @@ export async function safeCancelInvitation(invitationId: string) {
     auth.api.cancelInvitation({
       body: { invitationId },
       headers: await headers(),
+    }),
+  );
+}
+
+export async function safeSendVerificationEmail(email: string) {
+  const callbackUrl = new URL(`${env.betterAuth.baseURL}/sign-in`);
+  callbackUrl.searchParams.set("verified", "true");
+  return tryCatch(
+    auth.api.sendVerificationEmail({
+      body: { email, callbackURL: callbackUrl.toString() },
     }),
   );
 }
