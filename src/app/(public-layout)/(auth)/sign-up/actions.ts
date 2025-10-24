@@ -9,43 +9,33 @@ import {
   createErrorResult,
   type ActionResult,
 } from "@/lib/helpers/action-helpers";
+import { env } from "@/lib/env";
 
 export async function signupAction(data: SignupFormData): Promise<ActionResult> {
   try {
     const validatedData = signupSchema.parse(data);
+    const callbackUrl = new URL(`${env.betterAuth.baseURL}/sign-in`);
+    callbackUrl.searchParams.set("verified", "true");
 
-    const [, authError] = await safeSignUpEmail(
+    const [authResult, authError] = await safeSignUpEmail(
       validatedData.email,
       validatedData.password,
       validatedData.name,
+      callbackUrl.toString(),
     );
 
-    if (authError) {
+    if (authError && !authResult) {
       return createErrorResult(
         authError instanceof APIError ? authError.message : "Failed to create account",
       );
     }
 
-    const [verificationResult, verificationError] = await safeSendVerificationEmail(
-      validatedData.email,
-    );
-
-    const verificationUrl = `/verify-email?email=${encodeURIComponent(validatedData.email)}`;
-
-    if (verificationError) {
-      return createErrorResult(
-        verificationError instanceof APIError
-          ? verificationError.message
-          : "Failed to send verification email",
-        undefined,
-        verificationUrl,
-      );
-    }
-
+    const verificationUrl = new URL(`${env.betterAuth.baseURL}/verify-email`);
+    verificationUrl.searchParams.set("email", authResult.user.email);
     return createSuccessResult(
-      verificationResult,
+      authResult,
       "Account created successfully!",
-      verificationUrl,
+      verificationUrl.toString(),
     );
   } catch (error) {
     if (error instanceof ZodError) {

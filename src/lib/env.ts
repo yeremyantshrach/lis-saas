@@ -7,7 +7,9 @@ type EnvKey =
   | "POSTGRES_PASSWORD"
   | "POSTGRES_DB"
   | "STRIPE_SECRET_KEY"
-  | "STRIPE_WEBHOOK_SECRET";
+  | "STRIPE_WEBHOOK_SECRET"
+  | "RESEND_API_KEY"
+  | "RESEND_FROM_EMAIL";
 
 const REQUIRED_ENV_KEYS = [
   "BETTER_AUTH_SECRET",
@@ -19,6 +21,8 @@ const REQUIRED_ENV_KEYS = [
   "POSTGRES_DB",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
+  "RESEND_API_KEY",
+  "RESEND_FROM_EMAIL",
 ] as const satisfies readonly EnvKey[];
 
 function readEnv(key: EnvKey): string {
@@ -60,5 +64,9 @@ export const env = {
   stripe: {
     secretKey: rawEnv.STRIPE_SECRET_KEY,
     webhookSecret: rawEnv.STRIPE_WEBHOOK_SECRET,
+  },
+  resend: {
+    apiKey: rawEnv.RESEND_API_KEY,
+    fromEmail: rawEnv.RESEND_FROM_EMAIL,
   },
 } as const;

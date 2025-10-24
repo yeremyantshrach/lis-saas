@@ -19,10 +19,20 @@ export async function safeSignInEmail(email: string, password: string) {
   );
 }
 
-export async function safeSignUpEmail(email: string, password: string, name: string) {
+export async function safeSignUpEmail(
+  email: string,
+  password: string,
+  name: string,
+  callbackURL: string,
+) {
   return tryCatch(
     auth.api.signUpEmail({
-      body: { email, password, name },
+      body: {
+        email,
+        password,
+        name,
+        callbackURL,
+      },
     }),
   );
 }
