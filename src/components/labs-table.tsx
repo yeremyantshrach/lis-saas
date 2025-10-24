@@ -331,8 +331,8 @@ export function LabsTable({ labs, canManageLabs }: LabsTableProps) {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Lab</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to delete &quot;{deletingLab?.name}&quot;? This action cannot be
-                  undone.
+                  Are you sure you want to delete &quot;{deletingLab?.name}&quot;? This action
+                  cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

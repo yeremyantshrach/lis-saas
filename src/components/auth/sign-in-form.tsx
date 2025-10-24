@@ -60,7 +60,8 @@ export function SignInForm({ className, invitationId, ...props }: SignInFormProp
         }
 
         if (result.redirectUrl) {
-          router.replace(result.redirectUrl);
+          // todo: understand why router.push is nor invalidating dashboard cache
+          window.location.href = result.redirectUrl;
         } else {
           router.refresh();
         }

@@ -54,9 +54,10 @@ export interface OrganizationMemberWithUser {
 
 interface TeamMembersTableProps {
   members: OrganizationMemberWithUser[];
+  userId?: string;
 }
 
-export function TeamMembersTable({ members }: TeamMembersTableProps) {
+export function TeamMembersTable({ members, userId }: TeamMembersTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [pagination, setPagination] = useState<PaginationState>({
@@ -142,11 +143,11 @@ export function TeamMembersTable({ members }: TeamMembersTableProps) {
       cell: ({ row }) => {
         const role = row.original.role;
         const label = formatRoleLabel(role);
-        const isOwner = role === "org-owner";
+        const isCurrentUser = row.original.userId === userId;
         return (
           <div className="flex items-center gap-2">
             <Badge variant="secondary">{label}</Badge>
-            {isOwner && <Badge variant="default">Owner</Badge>}
+            {isCurrentUser && <Badge variant="default">You</Badge>}
           </div>
         );
       },

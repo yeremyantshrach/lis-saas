@@ -21,6 +21,7 @@ interface LabsPageProps {
   params: Promise<{ orgSlug: string }>;
   searchParams?: Promise<{ tab?: string }>;
 }
+const collator = new Intl.Collator("en", { sensitivity: "base" });
 
 export default async function LabsPage({ params, searchParams }: LabsPageProps) {
   const { orgSlug } = await params;
@@ -59,15 +60,14 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
     );
     activeOrg = orgResult ?? null;
   }
-  const collator = new Intl.Collator("en", { sensitivity: "base" });
 
-  const teamIds = allLabs.map((lab) => lab.id);
+  const labIds = allLabs.map((lab) => lab.id);
   const labTeamMemberships =
-    teamIds.length > 0 && organizationId
+    labIds.length > 0 && organizationId
       ? await db
           .select({
             userId: schema.labTeamMember.userId,
-            teamId: schema.labTeamMember.teamId,
+            labId: schema.labTeamMember.labId,
             labName: schema.labs.name,
           })
           .from(schema.labTeamMember)
@@ -75,15 +75,15 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
           .where(
             and(
               eq(schema.labs.organizationId, organizationId),
-              inArray(schema.labTeamMember.labId, teamIds),
+              inArray(schema.labTeamMember.labId, labIds),
             ),
           )
       : [];
   const memberTeamsByUserId = new Map<string, { id: string; name: string }>();
   for (const membership of labTeamMemberships) {
     memberTeamsByUserId.set(membership.userId, {
-      id: membership.teamId,
-      name: membership.labName ?? "Lab",
+      id: membership.labId,
+      name: membership.labName,
     });
   }
   const allMembers: OrganizationMemberWithUser[] = activeOrg?.members
@@ -99,23 +99,18 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
         .sort((a, b) => collator.compare(a.user.name || a.user.email, b.user.name || b.user.email))
     : [];
 
-  const activeTeamId = session.session?.activeTeamId ?? null;
+  const activeLabId = session.session?.activeLabId ?? null;
   const currentUserId = session.user.id;
-  const currentMember =
-    allMembers.find((member) => {
-      const memberUserId = member.userId ?? member.user?.id;
-      return memberUserId === currentUserId;
-    }) ?? null;
+  const currentMember = allMembers.find((member) => {
+    const memberUserId = member.userId ?? member.user?.id;
+    return memberUserId === currentUserId;
+  }) as OrganizationMemberWithUser;
+  const isOrgOwner = currentMember?.role === "org-owner";
 
-  let visibleLabs = allLabs;
-  if (activeTeamId && (!canManageLabs || currentMember?.role === "lab-admin")) {
-    visibleLabs = allLabs.filter((lab) => lab.id === activeTeamId);
-  }
-
-  const visibleMembers: OrganizationMemberWithUser[] =
-    activeTeamId && currentMember?.role === "lab-admin"
-      ? allMembers.filter((member) => member.team?.id === activeTeamId)
-      : allMembers;
+  const visibleLabs = !isOrgOwner ? allLabs.filter((lab) => lab.id === activeLabId) : allLabs;
+  const visibleMembers: OrganizationMemberWithUser[] = !isOrgOwner
+    ? allMembers.filter((member) => member.team?.id === activeLabId || member.role === "org-owner")
+    : allMembers;
 
   const uniqueRoles = visibleMembers.length
     ? [...new Set(visibleMembers.map((member) => formatRoleLabel(member.role)))]
@@ -133,9 +128,9 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
         })
       : [];
   const filteredPendingInvitations =
-    activeTeamId && (!canManageLabs || currentMember?.role === "lab-admin")
+    isOrgOwner && activeLabId
       ? pendingInvitations.filter(
-          (invitation) => (invitation.labId ?? invitation.lab?.id) === activeTeamId,
+          (invitation) => (invitation.labId ?? invitation.lab?.id) === activeLabId,
         )
       : pendingInvitations;
 
@@ -150,7 +145,7 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
   const initialTab = tabFromQuery && allowedTabs.includes(tabFromQuery) ? tabFromQuery : "labs";
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
       <h1 className="mb-6 text-3xl font-bold">Labs &amp; Team</h1>
 
       <div className="grid gap-4 pb-6 md:grid-cols-3">
@@ -223,7 +218,7 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <TeamMembersTable members={visibleMembers} />
+                <TeamMembersTable members={visibleMembers} userId={currentMember.userId} />
               </CardContent>
             </Card>
           </TabsContent>

@@ -37,6 +37,13 @@ export async function inviteToOrgAction(data: z.infer<typeof inviteSchema>) {
     }
 
     // Placeholder - needs proper Better Auth organization plugin setup
+    const body = {
+        email: data.email,
+        role: data.role,
+        teamId: activeTeamId ?? data.teamId,
+        organizationId: session.session?.activeOrganizationId as string,
+      };
+      console.log('body', body)
     const result = await auth.api.createInvitation({
       body: {
         email: data.email,
@@ -50,7 +57,7 @@ export async function inviteToOrgAction(data: z.infer<typeof inviteSchema>) {
     revalidatePath("/[orgSlug]/labs", "page");
     return { success: true, data: result };
   } catch (error) {
-    console.log("error", error);
+    console.log("error", JSON.stringify(error));
     return { success: false, error: "Failed to send invitation" };
   }
 }

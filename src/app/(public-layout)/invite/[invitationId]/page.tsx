@@ -38,11 +38,10 @@ export default async function AcceptInvitationPage({ params }: AcceptInvitationP
         );
       }
 
-      if (invitationError.status === "NOT_FOUND") {
+      if (invitationError.status === "NOT_FOUND" || invitationError.status === "FORBIDDEN") {
         notFound();
       }
     }
-
     throw invitationError;
   }
 

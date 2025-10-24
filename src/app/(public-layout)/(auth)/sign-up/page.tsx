@@ -1,4 +1,4 @@
-import { redirectIfAuthenticated } from "@/lib/auth-redirects";
+import { redirectIfAuthenticated } from "@/lib/auth/auth-redirects";
 import { SignupForm } from "@/components/auth/signup-form";
 
 interface SignupPageProps {

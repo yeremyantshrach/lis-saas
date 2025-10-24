@@ -25,7 +25,7 @@ export async function acceptInvitationAction(invitationId: string) {
 
     return { success: true, data: result };
   } catch (error) {
-    console.error("Failed to accept invitation", error);
+    console.log("Failed to accept invitation", error);
     return { success: false, error: "Failed to accept invitation." };
   }
 }

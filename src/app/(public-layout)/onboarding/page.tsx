@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getPostAuthRedirect, requireAuthenticated } from "@/lib/auth-redirects";
+import { getPostAuthRedirect, requireAuthenticated } from "@/lib/auth/auth-redirects";
 import { CreateOrganizationForm } from "./_components/create-organization-form";
 
 export default async function OnboardingPage() {

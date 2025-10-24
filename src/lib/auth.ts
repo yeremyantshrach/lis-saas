@@ -1,4 +1,4 @@
-import { betterAuth, APIError, createMiddleware, BetterAuthOptions } from "better-auth";
+import { betterAuth, APIError, BetterAuthOptions } from "better-auth";
 import { customSession, openAPI } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -11,6 +11,7 @@ import { db, schema } from "./database";
 import { env } from "./env";
 import { slugify } from "./utils";
 import { organizationAccessControl, organizationRoles } from "@/lib/auth/organization-permissions";
+import { create } from "domain";
 
 const stripeClient = new Stripe(env.stripe.secretKey, {
   apiVersion: "2025-08-27.basil",
@@ -40,28 +41,22 @@ const options = {
     session: {
       create: {
         before: async (session) => {
-          // Get the user's organization (they can only have one)
-          const userOrg = await db.query.member.findFirst({
-            where: (member, { eq }) => eq(member.userId, session.userId),
-            with: {
-              organization: true,
-            },
-          });
-
-          // Set the active organization if they have one
-          if (userOrg?.organization) {
-            return {
-              data: {
-                ...session,
-                activeOrganizationId: userOrg.organization.id,
-                // Store slug for easy client-side access
-                activeOrganizationSlug: userOrg.organization.slug,
-              },
-            };
-          }
-
+          const [userOrg, userTeam] = await Promise.all([
+            db.query.member.findFirst({
+              where: (member, { eq }) => eq(member.userId, session.userId),
+              with: { organization: true },
+            }),
+            db.query.labTeamMember.findFirst({
+              where: (labTeamMember, { eq }) => eq(labTeamMember.userId, session.userId),
+            }),
+          ]);
           return {
-            data: session,
+            data: {
+              ...session,
+              activeOrganizationId: userOrg?.organization?.id || null,
+              activeOrganizationSlug: userOrg?.organization?.slug || null,
+              activeLabId: userTeam?.labId || null,
+            },
           };
         },
       },
@@ -93,9 +88,22 @@ const options = {
         console.log("Send invitation url", `${env.betterAuth.baseURL}/invite/${id}`);
       },
       schema: {
+        session: {
+          fields: {
+            activeTeamId: "activeLabId",
+          },
+        },
         invitation: {
           fields: {
             teamId: "labId",
+          },
+          additionalFields: {
+            createdAt: {
+              type: "date",
+              defaultValue: () => new Date(),
+              sortable: true,
+              input: false,
+            },
           },
         },
         team: {
@@ -136,24 +144,28 @@ export const auth = betterAuth({
   plugins: [
     ...options.plugins,
     customSession(async ({ session, user }) => {
-      const userOrg = await db.query.member.findFirst({
-        where: (member, { eq }) => eq(member.userId, session.userId),
-        with: {
-          organization: true,
-        },
-      });
+      const [userOrg, userTeam] = await Promise.all([
+        db.query.member.findFirst({
+          where: (member, { eq }) => eq(member.userId, session.userId),
+          with: { organization: true },
+        }),
+        db.query.labTeamMember.findFirst({
+          where: (labTeamMember, { eq }) => eq(labTeamMember.userId, session.userId),
+          columns: { labId: true },
+        }),
+      ]);
       return {
         user,
         session: {
           ...session,
           activeOrganizationId: userOrg?.organization?.id || null,
           activeOrganizationSlug: userOrg?.organization?.slug || null,
+          activeLabId: userTeam?.labId || null,
         },
       };
     }, options),
   ],
 });
-
 export type Auth = typeof auth;
 export type AuthSession = typeof auth.$Infer.Session;
 export type Organization = typeof auth.$Infer.Organization;
