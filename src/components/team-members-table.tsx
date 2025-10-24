@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   ColumnDef,
   PaginationState,
@@ -27,8 +27,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { IconMail } from "@tabler/icons-react";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { IconEdit, IconMail, IconTrash } from "@tabler/icons-react";
 import { formatRoleLabel, getInitials } from "@/lib/utils";
+import { EditMemberForm } from "@/components/forms/edit-member-form";
+import { removeMemberAction } from "@/lib/actions/member-actions";
+import { type Lab } from "@/lib/auth-client";
 
 const joinedFormatter = new Intl.DateTimeFormat("en", {
   month: "short",
@@ -55,15 +77,26 @@ export interface OrganizationMemberWithUser {
 interface TeamMembersTableProps {
   members: OrganizationMemberWithUser[];
   userId?: string;
+  labs?: Lab[];
+  userRole?: string;
 }
 
-export function TeamMembersTable({ members, userId }: TeamMembersTableProps) {
+export function TeamMembersTable({ members, userId, labs = [], userRole }: TeamMembersTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<OrganizationMemberWithUser | null>(null);
+  const [deletingMember, setDeletingMember] = useState<OrganizationMemberWithUser | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  // Permission checks based on user role
+  const canEditRole = userRole === "org-owner" || userRole === "lab-admin";
+  const canChangeTeam = userRole === "org-owner";
 
   const normalizedMembers = useMemo(
     () =>
@@ -181,6 +214,48 @@ export function TeamMembersTable({ members, userId }: TeamMembersTableProps) {
       },
     },
   ];
+
+  // Add actions column if user has permission to edit members
+  if (canEditRole) {
+    columns.push({
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const member = row.original;
+        const isCurrentUser = member.userId === userId;
+        const isOrgOwner = member.role === "org-owner";
+        return isOrgOwner ? null : (
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={`Edit ${member.user.name || member.user.email}`}
+              onClick={() => {
+                setEditingMember(member);
+                setEditDrawerOpen(true);
+              }}
+              disabled={isCurrentUser}
+            >
+              <IconEdit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive"
+              aria-label={`Remove ${member.user.name || member.user.email}`}
+              onClick={() => {
+                setDeletingMember(member);
+                setDeleteDialogOpen(true);
+              }}
+              disabled={isCurrentUser}
+            >
+              <IconTrash className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    });
+  }
 
   const table = useReactTable({
     data: filteredMembers,
@@ -312,6 +387,76 @@ export function TeamMembersTable({ members, userId }: TeamMembersTableProps) {
           </div>
         </div>
       </div>
+
+      {/* Edit Member Drawer */}
+      <Drawer open={editDrawerOpen} direction="right" onOpenChange={setEditDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Edit Member</DrawerTitle>
+            <DrawerDescription>Update member permissions and team assignment.</DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4">
+            {editingMember && (
+              <EditMemberForm
+                memberId={editingMember.id}
+                currentRole={editingMember.role}
+                currentTeamId={editingMember.team?.id}
+                memberName={editingMember.user.name}
+                memberEmail={editingMember.user.email}
+                labs={labs}
+                canChangeRole={canEditRole}
+                canChangeTeam={canChangeTeam}
+                onSuccess={() => {
+                  setEditDrawerOpen(false);
+                  setEditingMember(null);
+                }}
+                onCancel={() => {
+                  setEditDrawerOpen(false);
+                  setEditingMember(null);
+                }}
+              />
+            )}
+          </div>
+          <DrawerFooter>
+            <DrawerClose asChild>
+              <Button variant="outline">Close</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Delete Member Alert Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove{" "}
+              <span className="font-semibold">
+                {deletingMember?.user.name || deletingMember?.user.email}
+              </span>{" "}
+              from the team? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!deletingMember) return;
+                startTransition(async () => {
+                  await removeMemberAction({ memberId: deletingMember.id });
+                  setDeleteDialogOpen(false);
+                  setDeletingMember(null);
+                });
+              }}
+              disabled={isPending}
+              className="bg-destructive text-primary-foreground hover:bg-destructive/90"
+            >
+              {isPending ? "Removing..." : "Remove Member"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

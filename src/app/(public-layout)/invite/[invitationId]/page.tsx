@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { AcceptInvitationCard } from "@/components/accept-invitation-card";
 import { tryCatch } from "@/lib/try-catch";
 import { APIError } from "better-auth/api";
+import { safeGetLabById } from "@/lib/helpers";
 
 interface AcceptInvitationPageProps {
   params: Promise<{ invitationId: string }>;
@@ -20,7 +21,6 @@ export default async function AcceptInvitationPage({ params }: AcceptInvitationP
       headers: requestHeaders,
     }),
   );
-
   if (!invitation) {
     if (invitationError instanceof APIError) {
       if (invitationError.status === "UNAUTHORIZED") {
@@ -38,13 +38,21 @@ export default async function AcceptInvitationPage({ params }: AcceptInvitationP
         );
       }
 
-      if (invitationError.status === "NOT_FOUND" || invitationError.status === "FORBIDDEN") {
+      if (
+        invitationError.status === "NOT_FOUND" ||
+        invitationError.status === "FORBIDDEN" ||
+        invitationError?.body?.code === "INVITATION_NOT_FOUND"
+      ) {
         notFound();
       }
     }
     throw invitationError;
   }
 
+  const [lab, labError] = await safeGetLabById(invitation.teamId as string);
+  if (!lab || labError) {
+    notFound();
+  }
   const isExpired = new Date(invitation.expiresAt) < new Date();
   const isAuthenticated = Boolean(session?.user);
   const currentUserEmail = session?.user?.email ?? null;
@@ -60,7 +68,7 @@ export default async function AcceptInvitationPage({ params }: AcceptInvitationP
         organizationName={invitation.organizationName}
         organizationSlug={invitation.organizationSlug}
         invitationEmail={invitation.email}
-        labName={"labName"}
+        labName={lab.name}
         status={invitation.status}
         expiresAt={invitation.expiresAt.toString()}
         isExpired={isExpired}

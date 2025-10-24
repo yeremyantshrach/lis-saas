@@ -81,3 +81,11 @@ export async function safeFindPendingInvitations(organizationId: string) {
     }),
   );
 }
+
+export async function safeGetLabById(labId: string) {
+  return tryCatch(
+    db.query.labs.findFirst({
+      where: eq(labs.id, labId),
+    }),
+  );
+}

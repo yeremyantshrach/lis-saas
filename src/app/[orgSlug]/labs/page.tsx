@@ -195,7 +195,12 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <TeamMembersTable members={visibleMembers} userId={currentMember.userId} />
+                <TeamMembersTable
+                  members={visibleMembers}
+                  userId={currentMember.userId}
+                  labs={visibleLabs}
+                  userRole={currentMember.role}
+                />
               </CardContent>
             </Card>
           </TabsContent>

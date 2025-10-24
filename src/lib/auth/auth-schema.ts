@@ -1,6 +1,8 @@
-import { pgTable, text, timestamp, boolean, pgEnum, uuid } from "drizzle-orm/pg-core";
+import { text, timestamp, boolean, pgEnum, uuid, pgSchema } from "drizzle-orm/pg-core";
 
-export const organizationRoleEnum = pgEnum("organization_role_enum", [
+export const authSchema = pgSchema("auth");
+
+export const organizationRoleEnum = authSchema.enum("organization_role_enum", [
   "org-owner",
   "lab-admin",
   "lab-cls",
@@ -9,7 +11,7 @@ export const organizationRoleEnum = pgEnum("organization_role_enum", [
   "lab-receptionist",
 ]);
 
-export const user = pgTable("user", {
+export const user = authSchema.table("user", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -26,7 +28,7 @@ export const user = pgTable("user", {
   banExpires: timestamp("ban_expires"),
 });
 
-export const session = pgTable("session", {
+export const session = authSchema.table("session", {
   id: uuid("id").primaryKey().defaultRandom(),
   expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
@@ -44,7 +46,7 @@ export const session = pgTable("session", {
   activeLabId: uuid("active_lab_id"),
 });
 
-export const account = pgTable("account", {
+export const account = authSchema.table("account", {
   id: uuid("id").primaryKey().defaultRandom(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
@@ -64,7 +66,7 @@ export const account = pgTable("account", {
     .notNull(),
 });
 
-export const verification = pgTable("verification", {
+export const verification = authSchema.table("verification", {
   id: uuid("id").primaryKey().defaultRandom(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
@@ -76,7 +78,7 @@ export const verification = pgTable("verification", {
     .notNull(),
 });
 
-export const labs = pgTable("labs", {
+export const labs = authSchema.table("labs", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   organizationId: uuid("organization_id")
@@ -86,7 +88,7 @@ export const labs = pgTable("labs", {
   updatedAt: timestamp("updated_at").$onUpdate(() => /* @__PURE__ */ new Date()),
 });
 
-export const labTeamMember = pgTable("lab_team_member", {
+export const labTeamMember = authSchema.table("lab_team_member", {
   id: uuid("id").primaryKey().defaultRandom(),
   labId: uuid("lab_id")
     .notNull()
@@ -97,7 +99,7 @@ export const labTeamMember = pgTable("lab_team_member", {
   createdAt: timestamp("created_at"),
 });
 
-export const organization = pgTable("organization", {
+export const organization = authSchema.table("organization", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
@@ -106,7 +108,7 @@ export const organization = pgTable("organization", {
   metadata: text("metadata"),
 });
 
-export const member = pgTable("member", {
+export const member = authSchema.table("member", {
   id: uuid("id").primaryKey().defaultRandom(),
   organizationId: uuid("organization_id")
     .notNull()
@@ -118,7 +120,7 @@ export const member = pgTable("member", {
   createdAt: timestamp("created_at").notNull(),
 });
 
-export const invitation = pgTable("invitation", {
+export const invitation = authSchema.table("invitation", {
   id: uuid("id").primaryKey().defaultRandom(),
   organizationId: uuid("organization_id")
     .notNull()

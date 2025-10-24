@@ -32,10 +32,6 @@ const options = {
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,
-    transaction: true,
-    debugLogs: {
-      create: true,
-    },
   }),
   databaseHooks: {
     session: {
