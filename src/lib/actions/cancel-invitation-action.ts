@@ -3,7 +3,12 @@
 import { requirePermission } from "@/lib/server-permissions";
 import { safeGetInvitation } from "@/lib/helpers/db-helpers";
 import { safeCancelInvitation } from "@/lib/helpers/auth-helpers";
-import { createSuccessResult, createErrorResult, revalidateOrgPaths, type ActionResult } from "@/lib/helpers/action-helpers";
+import {
+  createSuccessResult,
+  createErrorResult,
+  revalidateOrgPaths,
+  type ActionResult,
+} from "@/lib/helpers/action-helpers";
 
 export async function cancelInvitationAction(invitationId: string): Promise<ActionResult> {
   const { session } = await requirePermission("team:invite");
@@ -16,7 +21,7 @@ export async function cancelInvitationAction(invitationId: string): Promise<Acti
 
   if (activeTeamId) {
     const [invitation, inviteError] = await safeGetInvitation(invitationId);
-    
+
     if (inviteError) {
       return createErrorResult("Failed to fetch invitation details.");
     }
