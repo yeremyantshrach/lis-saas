@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  serverExternalPackages: [
+    "@react-email/components",
+    "@react-email/tailwind",
+    "@react-email/render",
+  ],
 };
 
 export default nextConfig;
