@@ -133,7 +133,7 @@ export function usePermissions() {
           "labPatients:update",
           "labPatients:delete",
         ],
-        "lab-tech": [
+        "lab-technician": [
           "labOrders:read",
           "labOrders:create",
           "labOrders:update",

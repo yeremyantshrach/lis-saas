@@ -129,7 +129,7 @@ function checkRolePermission(role: string, permission: Permission): boolean {
       "labPatients:update",
       "labPatients:delete",
     ],
-    "lab-tech": [
+    "lab-technician": [
       "labOrders:read",
       "labOrders:create",
       "labOrders:update",
