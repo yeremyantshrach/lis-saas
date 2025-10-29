@@ -78,6 +78,14 @@ export async function safeCreateInvitation(
   );
 }
 
+export async function safeListUserInvitations(email: string) {
+  return tryCatch(
+    auth.api.listUserInvitations({
+      query: { email: email.toLowerCase() },
+    }),
+  );
+}
+
 export async function safeAcceptInvitation(invitationId: string) {
   return tryCatch(
     auth.api.acceptInvitation({

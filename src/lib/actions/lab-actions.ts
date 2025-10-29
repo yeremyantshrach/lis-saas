@@ -44,7 +44,7 @@ export async function inviteToOrgAction(data: z.infer<typeof inviteSchema>): Pro
     session.session?.activeOrganizationId as string,
   );
   if (error) {
-    return createErrorResult("Failed to send invitation");
+    return createErrorResult(error.message || "Failed to send invitation");
   }
 
   revalidateOrgPaths();

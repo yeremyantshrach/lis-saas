@@ -10,7 +10,7 @@ import { createAccessControl } from "better-auth/plugins/access";
  * - org-owner - full access to organization and billing
  * - lab-admin (team) - manage lab teams and settings
  * - lab-cls (clinical laboratory scientist) - manage orders and results
- * - lab-tech (laboratory technician) - assist with order processing
+ * - lab-technician (laboratory technician) - assist with order processing
  * - lab-doc (laboratory doctor) - review and authorize results
  * - lab-receptionist - handle client interactions and sample intake
  */
@@ -71,7 +71,7 @@ export const organizationRoles = {
   "org-owner": orgOwner,
   "lab-admin": labAdmin,
   "lab-cls": labCls,
-  "lab-tech": labTech,
+  "lab-technician": labTech,
   "lab-doctor": labDoctor,
   "lab-receptionist": labReceptionist,
 };
