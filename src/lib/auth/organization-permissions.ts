@@ -20,6 +20,7 @@ const statement = {
   labSettings: ["read", "update"] as const,
   labOrders: ["read", "create", "update", "delete"] as const,
   labResults: ["read", "create", "update", "delete"] as const,
+  labTests: ["read", "create", "update", "delete"] as const,
   labPatients: ["read", "create", "update", "delete"] as const,
   ...defaultStatements,
 } as const;
@@ -31,6 +32,7 @@ export const orgOwner = organizationAccessControl.newRole({
   labSettings: ["read", "update"],
   labOrders: ["read", "create", "update", "delete"],
   labResults: ["read", "create", "update", "delete"],
+  labTests: ["read", "create", "update", "delete"],
   labPatients: ["read", "create", "update", "delete"],
 
   ...ownerAc.statements,
@@ -40,6 +42,7 @@ export const labAdmin = organizationAccessControl.newRole({
   labSettings: ["read", "update"],
   labOrders: ["read", "create", "update", "delete"],
   labResults: ["read", "create", "update", "delete"],
+  labTests: ["read", "create", "update", "delete"],
   labPatients: ["read", "create", "update", "delete"],
 
   ...adminAc.statements,
@@ -48,22 +51,26 @@ export const labAdmin = organizationAccessControl.newRole({
 export const labCls = organizationAccessControl.newRole({
   labOrders: ["read", "create", "update", "delete"],
   labResults: ["read", "create", "update", "delete"],
+  labTests: ["read", "create", "update", "delete"],
   labPatients: ["read", "create", "update", "delete"],
 });
 
 export const labTech = organizationAccessControl.newRole({
   labOrders: ["read", "create", "update"],
   labResults: ["read", "create", "update"],
+  labTests: ["read", "create", "update"],
   labPatients: ["read", "create", "update"],
 });
 
 export const labDoctor = organizationAccessControl.newRole({
   labResults: ["read", "update"],
+  labTests: ["read", "update"],
   labPatients: ["read"],
 });
 
 export const labReceptionist = organizationAccessControl.newRole({
   labOrders: ["read", "create"],
+  labTests: ["read"],
   labPatients: ["read", "create"],
 });
 

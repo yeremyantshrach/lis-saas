@@ -22,6 +22,10 @@ export type Permission =
   | "labResults:create"
   | "labResults:update"
   | "labResults:delete"
+  | "labTests:read"
+  | "labTests:create"
+  | "labTests:update"
+  | "labTests:delete"
   | "labPatients:read"
   | "labPatients:create"
   | "labPatients:update"
@@ -76,6 +80,10 @@ export function usePermissions() {
           "labResults:create",
           "labResults:update",
           "labResults:delete",
+          "labTests:read",
+          "labTests:create",
+          "labTests:update",
+          "labTests:delete",
           "labPatients:read",
           "labPatients:create",
           "labPatients:update",
@@ -98,6 +106,10 @@ export function usePermissions() {
           "labResults:create",
           "labResults:update",
           "labResults:delete",
+          "labTests:read",
+          "labTests:create",
+          "labTests:update",
+          "labTests:delete",
           "labPatients:read",
           "labPatients:create",
           "labPatients:update",
@@ -112,6 +124,10 @@ export function usePermissions() {
           "labResults:create",
           "labResults:update",
           "labResults:delete",
+          "labTests:read",
+          "labTests:create",
+          "labTests:update",
+          "labTests:delete",
           "labPatients:read",
           "labPatients:create",
           "labPatients:update",
@@ -124,14 +140,24 @@ export function usePermissions() {
           "labResults:read",
           "labResults:create",
           "labResults:update",
+          "labTests:read",
+          "labTests:create",
+          "labTests:update",
           "labPatients:read",
           "labPatients:create",
           "labPatients:update",
         ],
-        "lab-doctor": ["labResults:read", "labResults:update", "labPatients:read"],
+        "lab-doctor": [
+          "labResults:read",
+          "labResults:update",
+          "labTests:read",
+          "labTests:update",
+          "labPatients:read",
+        ],
         "lab-receptionist": [
           "labOrders:read",
           "labOrders:create",
+          "labTests:read",
           "labPatients:read",
           "labPatients:create",
         ],
