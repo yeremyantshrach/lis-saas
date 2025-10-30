@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { IconMicroscope, IconPlus } from "@tabler/icons-react";
 import {
   ColumnDef,
@@ -21,7 +21,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Table,
   TableBody,
@@ -51,12 +51,27 @@ import {
 } from "@/components/ui/empty";
 import { CreatePcrTestForm } from "@/components/lab-tests/create-pcr-test-form";
 import type { PcrLabTestRecord } from "@/lib/helpers/lab-tests-helpers";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { deletePcrTestAction } from "@/lib/actions/lab-test-actions";
+import { PCR_TEST_PANELS } from "@/lib/lab-tests/constants";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface PcrTestsDashboardProps {
   tests: PcrLabTestRecord[];
   labs: { id: string; name: string }[];
   activeLabId: string | null;
   canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
   orgSlug: string;
   showLoincField?: boolean;
   showCptField?: boolean;
@@ -64,6 +79,7 @@ interface PcrTestsDashboardProps {
 
 type PcrTestTableRow = {
   id: string;
+  labId: string;
   testName: string;
   testCode: string;
   labName: string;
@@ -95,22 +111,93 @@ const globalSearch: FilterFn<PcrTestTableRow> = (row, _columnId, filterValue) =>
 function PathogenStack({ pathogens }: { pathogens: PcrLabTestRecord["pathogenTargets"] }) {
   if (!pathogens.length) return <span>—</span>;
 
+  const previewLimit = 2;
+  const preview = pathogens.slice(0, previewLimit);
+  const remaining = Math.max(pathogens.length - previewLimit, 0);
+
   return (
-    <div className="flex flex-col gap-2">
-      {pathogens.map((pathogen, index) => (
-        <div
-          key={`${pathogen.name}-${pathogen.category}-${index}`}
-          className="rounded-md border border-border/60 px-2 py-1"
-        >
-          <div className="text-sm font-semibold leading-none">{pathogen.name}</div>
-          <Badge variant="outline" className="mt-1 w-fit text-[11px] font-medium">
-            {pathogen.category}
-          </Badge>
-          {pathogen.clinicalSignificance && (
-            <div className="text-xs text-muted-foreground">{pathogen.clinicalSignificance}</div>
-          )}
-        </div>
+    <div className="flex flex-wrap items-center gap-2">
+      {preview.map((pathogen, index) => (
+        <Badge key={`${pathogen.name}-${pathogen.category}-${index}`} variant="secondary">
+          {pathogen.name}
+        </Badge>
       ))}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs font-medium"
+            aria-label="View pathogen details"
+          >
+            {remaining > 0 ? `+${remaining} more` : "View"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80 max-h-80 space-y-3 overflow-y-auto">
+          {pathogens.map((pathogen, index) => (
+            <div
+              key={`${pathogen.name}-${pathogen.category}-${index}`}
+              className="rounded-md border border-border/60 p-3 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="font-medium leading-tight">{pathogen.name}</div>
+                <Badge variant="outline" className="text-[11px] font-medium">
+                  {pathogen.category}
+                </Badge>
+              </div>
+              {pathogen.clinicalSignificance ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {pathogen.clinicalSignificance}
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+function PcrTestActionsCell({
+  row,
+  canEdit,
+  canDelete,
+  onEdit,
+  onDelete,
+}: {
+  row: PcrTestTableRow;
+  canEdit: boolean;
+  canDelete: boolean;
+  onEdit: (id: string) => void;
+  onDelete: (row: PcrTestTableRow) => void;
+}) {
+  if (!canEdit && !canDelete) {
+    return <span className="text-sm text-muted-foreground">No actions available</span>;
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {canEdit ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onEdit(row.id)}
+          aria-label={`Edit ${row.testName}`}
+        >
+          Edit
+        </Button>
+      ) : null}
+      {canDelete ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-destructive hover:text-destructive"
+          onClick={() => onDelete(row)}
+          aria-label={`Delete ${row.testName}`}
+        >
+          Delete
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -118,27 +205,52 @@ function PathogenStack({ pathogens }: { pathogens: PcrLabTestRecord["pathogenTar
 function MarkerStack({ markers }: { markers: PcrLabTestRecord["resistanceMarkers"] }) {
   if (!markers.length) return <span>—</span>;
 
+  const previewLimit = 2;
+  const preview = markers.slice(0, previewLimit);
+  const remaining = Math.max(markers.length - previewLimit, 0);
+
   return (
-    <div className="flex flex-col gap-2">
-      {markers.map((marker, index) => (
-        <div
-          key={`${marker.markerName}-${marker.gene}-${index}`}
-          className="rounded-md border border-border/60 px-2 py-1"
-        >
-          <div className="text-sm font-semibold leading-none">
-            {marker.markerName}
-            {marker.gene ? (
-              <span className="text-muted-foreground">{` (${marker.gene})`}</span>
-            ) : null}
-          </div>
-          <Badge variant="outline" className="mt-1 w-fit text-[11px] font-medium">
-            {marker.antibioticClass}
-          </Badge>
-          {marker.clinicalImplication && (
-            <div className="text-xs text-muted-foreground">{marker.clinicalImplication}</div>
-          )}
-        </div>
+    <div className="flex flex-wrap items-center gap-2">
+      {preview.map((marker, index) => (
+        <Badge key={`${marker.markerName}-${marker.gene}-${index}`} variant="secondary">
+          {marker.markerName}
+        </Badge>
       ))}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs font-medium"
+            aria-label="View resistance marker details"
+          >
+            {remaining > 0 ? `+${remaining} more` : "View"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80 max-h-80 space-y-3 overflow-y-auto">
+          {markers.map((marker, index) => (
+            <div
+              key={`${marker.markerName}-${marker.gene}-${index}`}
+              className="rounded-md border border-border/60 p-3 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="font-medium leading-tight">
+                  {marker.markerName}
+                  {marker.gene ? (
+                    <span className="text-muted-foreground">{` (${marker.gene})`}</span>
+                  ) : null}
+                </div>
+                <Badge variant="outline" className="text-[11px] font-medium">
+                  {marker.antibioticClass}
+                </Badge>
+              </div>
+              {marker.clinicalImplication ? (
+                <p className="mt-2 text-sm text-muted-foreground">{marker.clinicalImplication}</p>
+              ) : null}
+            </div>
+          ))}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
@@ -148,17 +260,131 @@ export function PcrTestsDashboard({
   labs,
   activeLabId,
   canCreate,
+  canUpdate,
+  canDelete,
   orgSlug,
   showLoincField,
   showCptField,
 }: PcrTestsDashboardProps) {
   const [isSheetOpen, setSheetOpen] = useState(false);
-  const canOpenSheet = canCreate && labs.length > 0;
+  const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
+  const [selectedTest, setSelectedTest] = useState<PcrLabTestRecord | null>(null);
+  const [formKey, setFormKey] = useState<string>("create");
+  const canCreateTest = canCreate && labs.length > 0;
+  const baseLabId = activeLabId ?? labs[0]?.id ?? null;
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [deleteTarget, setDeleteTarget] = useState<PcrTestTableRow | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, startDelete] = useTransition();
+  const initialPanelParam = searchParams.get("panel");
+  const initialPanelFilter =
+    initialPanelParam &&
+    PCR_TEST_PANELS.includes(initialPanelParam as (typeof PCR_TEST_PANELS)[number])
+      ? initialPanelParam
+      : "all";
+  const [panelFilter, setPanelFilter] = useState<string>(initialPanelFilter);
+
+  useEffect(() => {
+    const param = searchParams.get("panel");
+    const normalized =
+      param && PCR_TEST_PANELS.includes(param as (typeof PCR_TEST_PANELS)[number]) ? param : "all";
+    setPanelFilter((prev) => (prev === normalized ? prev : normalized));
+  }, [searchParams]);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    setSheetOpen(open);
+    if (!open) {
+      setSheetMode("create");
+      setSelectedTest(null);
+      setFormKey(`create-${Date.now()}`);
+    }
+  }, []);
+
+  const openCreateSheet = useCallback(() => {
+    if (!canCreateTest) return;
+    setSheetMode("create");
+    setSelectedTest(null);
+    setFormKey(`create-${Date.now()}`);
+    setSheetOpen(true);
+  }, [canCreateTest]);
+
+  const openEditSheet = useCallback(
+    (testId: string) => {
+      if (!canUpdate) return;
+      const match = tests.find((item) => item.id === testId);
+      if (!match) return;
+      setSheetMode("edit");
+      setSelectedTest(match);
+      setFormKey(`edit-${match.id}-${Date.now()}`);
+      setSheetOpen(true);
+    },
+    [tests, canUpdate],
+  );
+
+  const handleFormSuccess = useCallback(() => {
+    setSheetOpen(false);
+    setSheetMode("create");
+    setSelectedTest(null);
+    setFormKey(`create-${Date.now()}`);
+  }, []);
+
+  const handlePanelFilterChange = useCallback(
+    (value: string) => {
+      setPanelFilter(value);
+      if (!pathname) return;
+      const next = new URLSearchParams(searchParams.toString());
+      if (value === "all") {
+        next.delete("panel");
+      } else {
+        next.set("panel", value);
+      }
+      const queryString = next.toString();
+      router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const handleRequestDelete = useCallback((row: PcrTestTableRow) => {
+    if (!canDelete) return;
+    setDeleteError(null);
+    setDeleteTarget(row);
+  }, [canDelete]);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!deleteTarget || !canDelete) return;
+    startDelete(async () => {
+      setDeleteError(null);
+      const result = await deletePcrTestAction({
+        id: deleteTarget.id,
+        labId: deleteTarget.labId,
+        orgSlug,
+      });
+
+      if (result.success) {
+        setDeleteTarget(null);
+        router.refresh();
+      } else if (result.errors) {
+        const fallback = Object.values(result.errors)[0]?.[0];
+        setDeleteError(fallback ?? "Unable to delete test.");
+      } else if (result.error) {
+        setDeleteError(result.error);
+      } else {
+        setDeleteError("Unable to delete test.");
+      }
+    });
+  }, [deleteTarget, orgSlug, router, canDelete]);
 
   const labLookup = useMemo(() => new Map(labs.map((lab) => [lab.id, lab.name])), [labs]);
 
+  const filteredTests = useMemo(() => {
+    if (panelFilter === "all") return tests;
+    return tests.filter((test) => test.panel === panelFilter);
+  }, [tests, panelFilter]);
+
   const tableData = useMemo<PcrTestTableRow[]>(() => {
-    return tests.map((test) => {
+    return filteredTests.map((test) => {
       const priceValue = Number.parseFloat(test.price ?? "0");
       const priceNumber = Number.isFinite(priceValue) ? priceValue : 0;
       const priceDisplay = Number.isFinite(priceValue)
@@ -174,6 +400,7 @@ export function PcrTestsDashboard({
         test.loincCode ?? "",
         test.cptCode ?? "",
         test.defaultClinicalNotes ?? "",
+        test.description ?? "",
         ...test.pathogenTargets.map(
           (p) => `${p.name} ${p.category} ${p.clinicalSignificance ?? ""}`,
         ),
@@ -186,6 +413,7 @@ export function PcrTestsDashboard({
 
       return {
         id: test.id,
+        labId: test.labId,
         testName: test.testName,
         testCode: test.testCode,
         labName: labLookup.get(test.labId) ?? "Unknown lab",
@@ -201,12 +429,12 @@ export function PcrTestsDashboard({
         searchText,
       } satisfies PcrTestTableRow;
     });
-  }, [tests, labLookup]);
+  }, [filteredTests, labLookup]);
 
   const panelOptions = useMemo(() => {
-    const set = new Set(tableData.map((row) => row.panel));
+    const set = new Set(tests.map((test) => test.panel));
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [tableData]);
+  }, [tests]);
 
   const sampleTypeOptions = useMemo(() => {
     const set = new Set(tableData.map((row) => row.sampleType));
@@ -284,8 +512,25 @@ export function PcrTestsDashboard({
       ),
     });
 
+    if (canUpdate || canDelete) {
+      base.push({
+        id: "actions",
+        header: "Actions",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <PcrTestActionsCell
+            row={row.original}
+            canEdit={canUpdate}
+            canDelete={canDelete}
+            onEdit={openEditSheet}
+            onDelete={handleRequestDelete}
+          />
+        ),
+      });
+    }
+
     return base;
-  }, [showLoincField, showCptField]);
+  }, [showLoincField, showCptField, canUpdate, canDelete, openEditSheet, handleRequestDelete]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -311,10 +556,9 @@ export function PcrTestsDashboard({
       ? "Browse PCR assays across your labs, grouped by the teams that own them."
       : "Browse PCR assays available to your lab team.";
 
-  const panelColumn = table.getColumn("panel");
   const sampleColumn = table.getColumn("sampleType");
   const isFiltered = Boolean(
-    globalFilter || panelColumn?.getFilterValue() || sampleColumn?.getFilterValue(),
+    globalFilter || panelFilter !== "all" || sampleColumn?.getFilterValue(),
   );
 
   const pagination = table.getState().pagination;
@@ -326,7 +570,17 @@ export function PcrTestsDashboard({
   const resetFilters = () => {
     table.resetColumnFilters();
     setGlobalFilter("");
+    if (panelFilter !== "all") {
+      handlePanelFilterChange("all");
+    }
   };
+
+  const sheetTitle = sheetMode === "edit" ? "Edit PCR Test" : "Create PCR Test";
+  const sheetDescription =
+    sheetMode === "edit"
+      ? "Update the identifiers, pricing, and interpretation details for this assay."
+      : "Capture the metadata your team needs to order, price, and report this assay consistently.";
+  const formDefaultLabId = sheetMode === "edit" ? (selectedTest?.labId ?? baseLabId) : baseLabId;
 
   return (
     <div className="flex flex-col gap-6">
@@ -335,41 +589,75 @@ export function PcrTestsDashboard({
           <h1 className="text-3xl font-bold">PCR Test Catalog</h1>
           <p className="text-muted-foreground">{headerSubtitle}</p>
         </div>
-        {canOpenSheet ? (
-          <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
-              <Button>
-                <IconPlus className="mr-2 h-4 w-4" />
-                New PCR Test
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="right"
-              className="flex h-full w-full flex-col overflow-hidden sm:max-w-5xl lg:max-w-6xl"
-            >
-              <SheetHeader>
-                <SheetTitle>Create PCR Test</SheetTitle>
-                <SheetDescription>
-                  Capture the metadata your team needs to order, price, and report this assay
-                  consistently.
-                </SheetDescription>
-              </SheetHeader>
-              <div className="flex-1 overflow-y-auto px-6 pb-6">
-                <CreatePcrTestForm
-                  labs={labs}
-                  defaultLabId={activeLabId ?? labs[0]?.id}
-                  orgSlug={orgSlug}
-                  showLoincField={showLoincField}
-                  showCptField={showCptField}
-                  onSuccess={() => setSheetOpen(false)}
-                />
-              </div>
-            </SheetContent>
-          </Sheet>
-        ) : canCreate ? (
-          <Button disabled>Create PCR Test</Button>
+        {canCreate ? (
+          <Button onClick={openCreateSheet} disabled={!canCreateTest}>
+            <IconPlus className="mr-2 h-4 w-4" />
+            New PCR Test
+          </Button>
         ) : null}
       </div>
+
+      <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
+        <SheetContent
+          side="right"
+          className="flex h-full w-full flex-col overflow-hidden sm:max-w-5xl lg:max-w-6xl"
+        >
+          <SheetHeader>
+            <SheetTitle>{sheetTitle}</SheetTitle>
+            <SheetDescription>{sheetDescription}</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 flex-1 overflow-y-auto px-6 pb-1">
+            <CreatePcrTestForm
+              key={formKey}
+              labs={labs}
+              defaultLabId={formDefaultLabId}
+              orgSlug={orgSlug}
+              showLoincField={showLoincField}
+              showCptField={showCptField}
+              mode={sheetMode}
+              initialData={sheetMode === "edit" ? selectedTest : null}
+              onSuccess={handleFormSuccess}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {canDelete ? (
+        <AlertDialog
+          open={Boolean(deleteTarget)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setDeleteTarget(null);
+              setDeleteError(null);
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete PCR test</AlertDialogTitle>
+              <AlertDialogDescription>
+                {deleteTarget
+                  ? `This will permanently remove ${deleteTarget.testName} and its reporting details.`
+                  : "This will permanently remove the selected test and its reporting details."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={isDeleting}
+                onClick={(event) => {
+                  event.preventDefault();
+                  handleConfirmDelete();
+                }}
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : null}
 
       <Card>
         <CardHeader className="space-y-4">
@@ -387,12 +675,7 @@ export function PcrTestsDashboard({
                 placeholder="Search tests, labs, pathogens..."
                 className="lg:w-[240px]"
               />
-              <Select
-                value={(panelColumn?.getFilterValue() as string) ?? "all"}
-                onValueChange={(value) =>
-                  panelColumn?.setFilterValue(value === "all" ? undefined : value)
-                }
-              >
+              <Select value={panelFilter} onValueChange={handlePanelFilterChange}>
                 <SelectTrigger className="lg:w-[180px]">
                   <SelectValue placeholder="Panel" />
                 </SelectTrigger>
@@ -441,11 +724,11 @@ export function PcrTestsDashboard({
                 <EmptyTitle>No PCR tests yet</EmptyTitle>
                 <EmptyDescription>
                   Start capturing your assay catalog so orders and billing stay consistent.{" "}
-                  {canOpenSheet
-                    ? "Use the button above to add your first test."
-                    : canCreate
-                      ? "Add your first lab to begin creating tests."
-                      : ""}
+                  {canCreate
+                    ? labs.length > 0
+                      ? "Use the button above to add your first test."
+                      : "Add your first lab to begin creating tests."
+                    : ""}
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
