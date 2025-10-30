@@ -36,7 +36,7 @@ const resistanceMarkerSchema = z.object({
 });
 
 export const createPcrTestSchema = z.object({
-  labId: z.string().uuid({ message: "Select a valid lab" }).optional(),
+  labId: z.uuid({ message: "Select a valid lab" }).optional(),
   testCode: z
     .string()
     .trim()
@@ -84,3 +84,18 @@ export const createPcrTestSchema = z.object({
 
 export type CreatePcrTestFormValues = z.input<typeof createPcrTestSchema>;
 export type CreatePcrTestInput = z.infer<typeof createPcrTestSchema>;
+
+export const updatePcrTestSchema = createPcrTestSchema.extend({
+  id: z.string().uuid({ message: "Invalid test id" }),
+});
+
+export type UpdatePcrTestFormValues = z.input<typeof updatePcrTestSchema>;
+export type UpdatePcrTestInput = z.infer<typeof updatePcrTestSchema>;
+
+export const deletePcrTestSchema = z.object({
+  id: z.uuid({ message: "Invalid test id" }),
+  labId: z.uuid({ message: "Select a valid lab" }).optional(),
+  orgSlug: z.string().optional(),
+});
+
+export type DeletePcrTestInput = z.infer<typeof deletePcrTestSchema>;

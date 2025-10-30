@@ -441,6 +441,7 @@ export function TeamMembersTable({ members, userId, labs = [], userRole }: TeamM
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
+              variant="destructive"
               onClick={() => {
                 if (!deletingMember) return;
                 startTransition(async () => {
@@ -450,7 +451,6 @@ export function TeamMembersTable({ members, userId, labs = [], userRole }: TeamM
                 });
               }}
               disabled={isPending}
-              className="bg-destructive text-primary-foreground hover:bg-destructive/90"
             >
               {isPending ? "Removing..." : "Remove Member"}
             </AlertDialogAction>

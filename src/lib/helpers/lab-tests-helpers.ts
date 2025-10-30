@@ -1,4 +1,4 @@
-import { sql, asc, eq } from "drizzle-orm";
+import { sql, asc, eq, and, ne } from "drizzle-orm";
 import { db } from "@/lib/database";
 import { labTests, labTestPcrDetails } from "@/lib/lab-tests/schema";
 import {
@@ -33,6 +33,15 @@ export interface CreatePcrTestInput {
   cptCode?: string | null;
   description?: string | null;
   defaultClinicalNotes?: string | null;
+}
+
+export interface UpdatePcrTestInput extends CreatePcrTestInput {
+  id: string;
+}
+
+export interface DeletePcrTestInput {
+  id: string;
+  labId?: string | null;
 }
 
 export interface PcrLabTestRecord {
@@ -120,12 +129,16 @@ function generateTestCode(): string {
   return `PCR-${randomThreeDigits}-${randomTwoDigits}`;
 }
 
-async function ensureUniqueTestCode(tx: Transaction, testCode: string): Promise<boolean> {
-  const existing = await tx
-    .select({ id: labTests.id })
-    .from(labTests)
-    .where(eq(labTests.testCode, testCode))
-    .limit(1);
+async function ensureUniqueTestCode(
+  tx: Transaction,
+  testCode: string,
+  excludeId?: string,
+): Promise<boolean> {
+  const condition = excludeId
+    ? and(eq(labTests.testCode, testCode), ne(labTests.id, excludeId))
+    : eq(labTests.testCode, testCode);
+
+  const existing = await tx.select({ id: labTests.id }).from(labTests).where(condition).limit(1);
 
   return existing.length === 0;
 }
@@ -227,5 +240,133 @@ export async function createPcrLabTest(
     }
 
     return { id: labTest.id };
+  });
+}
+
+export async function updatePcrLabTest(
+  context: LabTestRlsContext,
+  input: UpdatePcrTestInput,
+): Promise<{ id: string }> {
+  if (!PCR_TEST_PANELS.includes(input.panel)) {
+    throw new Error("Unsupported PCR panel selection");
+  }
+
+  if (!PCR_SAMPLE_TYPES.includes(input.sampleType)) {
+    throw new Error("Unsupported sample type selection");
+  }
+
+  const normalizedPathogens: PcrPathogenTarget[] = (input.pathogenTargets ?? []).map(
+    (pathogen) => ({
+      name: pathogen.name.trim(),
+      category: pathogen.category,
+      clinicalSignificance: pathogen.clinicalSignificance
+        ? pathogen.clinicalSignificance.trim()
+        : undefined,
+    }),
+  );
+
+  const normalizedMarkers: PcrResistanceMarker[] = (input.resistanceMarkers ?? []).map(
+    (marker) => ({
+      markerName: marker.markerName.trim(),
+      gene: marker.gene.trim(),
+      antibioticClass: marker.antibioticClass.trim(),
+      clinicalImplication: marker.clinicalImplication
+        ? marker.clinicalImplication.trim()
+        : undefined,
+    }),
+  );
+
+  return db.transaction(async (tx) => {
+    await applyLabTestRlsContext(tx, context);
+
+    const [existing] = await tx
+      .select({
+        id: labTests.id,
+        labId: labTests.labId,
+        testCode: labTests.testCode,
+      })
+      .from(labTests)
+      .where(eq(labTests.id, input.id))
+      .limit(1);
+
+    if (!existing) {
+      throw new Error("Lab test not found");
+    }
+
+    if (context.labId !== existing.labId) {
+      await tx.execute(
+        sql`select set_config('lis.active_lab_id', ${existing.labId ?? ""}, true) as ignored`,
+      );
+    }
+
+    if (input.labId && input.labId !== existing.labId) {
+      throw new Error("Changing the owning lab is not supported.");
+    }
+
+    const resolvedCode = input.testCode ?? existing.testCode;
+
+    if (resolvedCode !== existing.testCode) {
+      const isUnique = await ensureUniqueTestCode(tx, resolvedCode, existing.id);
+      if (!isUnique) {
+        throw new Error("Test code already in use. Provide a unique code or leave blank.");
+      }
+    }
+
+    await tx
+      .update(labTests)
+      .set({
+        testCode: resolvedCode,
+        testName: input.testName,
+        price: input.price,
+        loincCode: input.loincCode ?? null,
+        cptCode: input.cptCode ?? null,
+        description: input.description ?? null,
+        defaultClinicalNotes: input.defaultClinicalNotes ?? null,
+      })
+      .where(eq(labTests.id, input.id));
+
+    await tx
+      .update(labTestPcrDetails)
+      .set({
+        panel: input.panel,
+        sampleType: input.sampleType,
+        pathogenTargets: normalizedPathogens,
+        resistanceMarkers: normalizedMarkers,
+      })
+      .where(eq(labTestPcrDetails.labTestId, input.id));
+
+    return { id: existing.id };
+  });
+}
+
+export async function deletePcrLabTest(
+  context: LabTestRlsContext,
+  input: DeletePcrTestInput,
+): Promise<{ id: string }> {
+  return db.transaction(async (tx) => {
+    await applyLabTestRlsContext(tx, context);
+
+    const [existing] = await tx
+      .select({
+        id: labTests.id,
+        labId: labTests.labId,
+      })
+      .from(labTests)
+      .where(eq(labTests.id, input.id))
+      .limit(1);
+
+    if (!existing) {
+      throw new Error("Lab test not found");
+    }
+
+    if (context.labId !== existing.labId) {
+      await tx.execute(
+        sql`select set_config('lis.active_lab_id', ${existing.labId ?? ""}, true) as ignored`,
+      );
+    }
+
+    await tx.delete(labTests).where(eq(labTests.id, input.id));
+
+    return { id: existing.id };
   });
 }

@@ -337,7 +337,11 @@ export function LabsTable({ labs, canManageLabs }: LabsTableProps) {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} disabled={isPending}>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={isPending}
+                  variant="destructive"
+                >
                   {isPending ? "Deleting..." : "Delete"}
                 </AlertDialogAction>
               </AlertDialogFooter>

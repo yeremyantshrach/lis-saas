@@ -1,8 +1,17 @@
 "use server";
 
 import { z, flattenError } from "zod";
-import { createPcrTestSchema } from "@/lib/validations/lab-tests";
-import { createPcrLabTest, type LabTestRlsContext } from "@/lib/helpers/lab-tests-helpers";
+import {
+  createPcrTestSchema,
+  deletePcrTestSchema,
+  updatePcrTestSchema,
+} from "@/lib/validations/lab-tests";
+import {
+  createPcrLabTest,
+  deletePcrLabTest,
+  updatePcrLabTest,
+  type LabTestRlsContext,
+} from "@/lib/helpers/lab-tests-helpers";
 import {
   createErrorResult,
   createSuccessResult,
@@ -101,6 +110,127 @@ export async function createPcrTestAction(
     console.error("Failed to create PCR test", error);
     const message =
       error instanceof Error && error.message ? error.message : "Failed to create PCR test";
+    return createErrorResult(message);
+  }
+}
+
+export async function updatePcrTestAction(
+  input: z.input<typeof updatePcrTestSchema>,
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = updatePcrTestSchema.safeParse(input);
+  if (!parsed.success) {
+    return createErrorResult(
+      "Please check the form for errors",
+      formatValidationErrors(parsed.error),
+    );
+  }
+
+  const { session } = await requirePermission("labTests:update");
+
+  const organizationId = session.session?.activeOrganizationId ?? null;
+  if (!organizationId) {
+    return createErrorResult("Active organization is required to update tests");
+  }
+
+  const selectedLabId = parsed.data.labId ?? session.session?.activeLabId ?? null;
+  if (!selectedLabId) {
+    return createErrorResult("Select the lab this test belongs to");
+  }
+
+  const context: LabTestRlsContext = {
+    userId: session.user.id,
+    organizationId,
+    labId: selectedLabId,
+  };
+
+  try {
+    const trimOptional = (value?: string) => {
+      if (!value) return undefined;
+      const trimmed = value.trim();
+      return trimmed.length === 0 ? undefined : trimmed;
+    };
+
+    const testCode = trimOptional(parsed.data.testCode)?.toUpperCase();
+    const loincCode = trimOptional(parsed.data.loincCode);
+    const cptCode = trimOptional(parsed.data.cptCode);
+    const description = trimOptional(parsed.data.description);
+    const defaultClinicalNotes = trimOptional(parsed.data.defaultClinicalNotes);
+
+    const resistanceMarkers = parsed.data.resistanceMarkers ?? [];
+
+    const updated = await updatePcrLabTest(context, {
+      id: parsed.data.id,
+      labId: selectedLabId,
+      testCode,
+      testName: parsed.data.testName,
+      panel: parsed.data.panel,
+      sampleType: parsed.data.sampleType,
+      price: parsed.data.price,
+      pathogenTargets: parsed.data.pathogenTargets,
+      resistanceMarkers,
+      loincCode,
+      cptCode,
+      description,
+      defaultClinicalNotes,
+    });
+
+    if (parsed.data.orgSlug) {
+      revalidatePath(`/${parsed.data.orgSlug}/lab-tests`);
+    }
+
+    return createSuccessResult(updated);
+  } catch (error) {
+    console.error("Failed to update PCR test", error);
+    const message =
+      error instanceof Error && error.message ? error.message : "Failed to update PCR test";
+    return createErrorResult(message);
+  }
+}
+
+export async function deletePcrTestAction(
+  input: z.input<typeof deletePcrTestSchema>,
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = deletePcrTestSchema.safeParse(input);
+  if (!parsed.success) {
+    return createErrorResult(
+      "Unable to delete test. Please try again.",
+      formatValidationErrors(parsed.error),
+    );
+  }
+
+  const { session } = await requirePermission("labTests:delete");
+
+  const organizationId = session.session?.activeOrganizationId ?? null;
+  if (!organizationId) {
+    return createErrorResult("Active organization is required to delete tests");
+  }
+
+  const selectedLabId = parsed.data.labId ?? session.session?.activeLabId ?? null;
+  if (!selectedLabId) {
+    return createErrorResult("Select the lab this test belongs to");
+  }
+
+  const context: LabTestRlsContext = {
+    userId: session.user.id,
+    organizationId,
+    labId: selectedLabId,
+  };
+
+  try {
+    const deleted = await deletePcrLabTest(context, {
+      id: parsed.data.id,
+      labId: selectedLabId,
+    });
+
+    if (parsed.data.orgSlug) {
+      revalidatePath(`/${parsed.data.orgSlug}/lab-tests`);
+    }
+
+    return createSuccessResult(deleted);
+  } catch (error) {
+    console.error("Failed to delete PCR test", error);
+    const message =
+      error instanceof Error && error.message ? error.message : "Failed to delete PCR test";
     return createErrorResult(message);
   }
 }

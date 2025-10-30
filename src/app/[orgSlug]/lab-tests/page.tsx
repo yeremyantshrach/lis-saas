@@ -39,7 +39,11 @@ export default async function LabTestsPage({ params }: PageProps<"/[orgSlug]/lab
     }
   }
 
-  const canCreate = await checkPermission("labTests:create");
+  const [canCreate, canUpdate, canDelete] = await Promise.all([
+    checkPermission("labTests:create"),
+    checkPermission("labTests:update"),
+    checkPermission("labTests:delete"),
+  ]);
 
   const showLoincField = false;
   const showCptField = false;
@@ -51,6 +55,8 @@ export default async function LabTestsPage({ params }: PageProps<"/[orgSlug]/lab
         labs={labs}
         activeLabId={activeLabId}
         canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
         orgSlug={orgSlug}
         showLoincField={showLoincField}
         showCptField={showCptField}

@@ -346,7 +346,7 @@ export function InvitationsTable({ invitations }: InvitationsTableProps) {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Keep Invitation</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              variant="destructive"
               onClick={handleCancel}
               disabled={isPending}
             >
