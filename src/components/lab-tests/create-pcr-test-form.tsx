@@ -610,7 +610,7 @@ export function CreatePcrTestForm({
               <FormField
                 control={form.control}
                 name="pathogenTargets"
-                render={({ field: _field }) => (
+                render={() => (
                   <FormItem className="space-y-4">
                     <FormDescription className="max-w-xl">
                       At least one pathogen is required. Add more to capture co-detections or panel
@@ -762,7 +762,7 @@ export function CreatePcrTestForm({
               <FormField
                 control={form.control}
                 name="resistanceMarkers"
-                render={({ field: _field }) => (
+                render={() => (
                   <FormItem className="space-y-4">
                     <FormDescription className="max-w-xl">
                       Optional. Great for stewardship teams and automated interpretive comments.
