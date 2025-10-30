@@ -11,15 +11,18 @@ export default async function LabTestsPage({ params }: PageProps<"/[orgSlug]/lab
   const { session } = await requirePermission("labTests:read");
 
   const organizationId = session.session?.activeOrganizationId ?? null;
+  const isGlobalAdmin = session.user.isGlobalAdmin ?? false;
   const activeLabId = session.session?.activeLabId ?? null;
 
-  const tests = organizationId
-    ? await listAccessiblePcrTests({
-        userId: session.user.id,
-        organizationId,
-        labId: activeLabId,
-      })
-    : [];
+  const tests =
+    organizationId || isGlobalAdmin
+      ? await listAccessiblePcrTests({
+          userId: session.user.id,
+          organizationId,
+          labId: activeLabId,
+          isGlobalAdmin,
+        })
+      : [];
 
   const requestHeaders = await headers();
   const [labsResponse] = await tryCatch(

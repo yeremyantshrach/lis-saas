@@ -40,11 +40,18 @@ export function usePermissions() {
   const { data: activeOrg, isPending: isPendingOrg } = authClient.useActiveOrganization();
 
   const isLoading = isPending || isPendingOrg;
+  const isGlobalAdmin = session?.user?.isGlobalAdmin ?? false;
 
   const hasPermission = useCallback(
     (permission: Permission): boolean => {
       if (isLoading) return false;
-      if (!session?.user || !activeOrg) return false;
+      if (!session?.user) return false;
+
+      if (session.user.isGlobalAdmin) {
+        return true;
+      }
+
+      if (!activeOrg) return false;
 
       // App-level admin has all permissions
       if (session.user?.role === "admin") return true;
@@ -184,5 +191,6 @@ export function usePermissions() {
     canManageBilling,
     canManageLabSettings,
     isLoading,
+    isGlobalAdmin,
   };
 }

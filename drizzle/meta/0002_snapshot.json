@@ -1,0 +1,1108 @@
+{
+  "id": "1b8bc05b-a39b-451b-a647-ed2840efba5b",
+  "prevId": "be9f64a4-8938-4d31-a206-e7dffff515d1",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "auth.account": {
+      "name": "account",
+      "schema": "auth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_token": {
+          "name": "id_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "access_token_expires_at": {
+          "name": "access_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token_expires_at": {
+          "name": "refresh_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "account_user_id_user_id_fk": {
+          "name": "account_user_id_user_id_fk",
+          "tableFrom": "account",
+          "tableTo": "user",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "auth.invitation": {
+      "name": "invitation",
+      "schema": "auth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "organization_role_enum",
+          "typeSchema": "auth",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lab_id": {
+          "name": "lab_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "inviter_id": {
+          "name": "inviter_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "invitation_organization_id_organization_id_fk": {
+          "name": "invitation_organization_id_organization_id_fk",
+          "tableFrom": "invitation",
+          "tableTo": "organization",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "invitation_inviter_id_user_id_fk": {
+          "name": "invitation_inviter_id_user_id_fk",
+          "tableFrom": "invitation",
+          "tableTo": "user",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "inviter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "auth.lab_team_member": {
+      "name": "lab_team_member",
+      "schema": "auth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "lab_id": {
+          "name": "lab_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "lab_team_member_lab_id_labs_id_fk": {
+          "name": "lab_team_member_lab_id_labs_id_fk",
+          "tableFrom": "lab_team_member",
+          "tableTo": "labs",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "lab_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "lab_team_member_user_id_user_id_fk": {
+          "name": "lab_team_member_user_id_user_id_fk",
+          "tableFrom": "lab_team_member",
+          "tableTo": "user",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "auth.labs": {
+      "name": "labs",
+      "schema": "auth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "labs_organization_id_organization_id_fk": {
+          "name": "labs_organization_id_organization_id_fk",
+          "tableFrom": "labs",
+          "tableTo": "organization",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "auth.member": {
+      "name": "member",
+      "schema": "auth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "organization_role_enum",
+          "typeSchema": "auth",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "member_organization_id_organization_id_fk": {
+          "name": "member_organization_id_organization_id_fk",
+          "tableFrom": "member",
+          "tableTo": "organization",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "member_user_id_user_id_fk": {
+          "name": "member_user_id_user_id_fk",
+          "tableFrom": "member",
+          "tableTo": "user",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "auth.organization": {
+      "name": "organization",
+      "schema": "auth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "logo": {
+          "name": "logo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "organization_slug_unique": {
+          "name": "organization_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "auth.session": {
+      "name": "session",
+      "schema": "auth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "impersonated_by": {
+          "name": "impersonated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active_organization_id": {
+          "name": "active_organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active_lab_id": {
+          "name": "active_lab_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "session_user_id_user_id_fk": {
+          "name": "session_user_id_user_id_fk",
+          "tableFrom": "session",
+          "tableTo": "user",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "session_token_unique": {
+          "name": "session_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "auth.user": {
+      "name": "user",
+      "schema": "auth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email_verified": {
+          "name": "email_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "banned": {
+          "name": "banned",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "ban_reason": {
+          "name": "ban_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ban_expires": {
+          "name": "ban_expires",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_email_unique": {
+          "name": "user_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "auth.verification": {
+      "name": "verification",
+      "schema": "auth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.lab_test_pcr_details": {
+      "name": "lab_test_pcr_details",
+      "schema": "",
+      "columns": {
+        "lab_test_id": {
+          "name": "lab_test_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "panel": {
+          "name": "panel",
+          "type": "lab_test_panel",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sample_type": {
+          "name": "sample_type",
+          "type": "lab_test_sample_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pathogen_targets": {
+          "name": "pathogen_targets",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "resistance_markers": {
+          "name": "resistance_markers",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        }
+      },
+      "indexes": {
+        "lab_test_pcr_details_panel_idx": {
+          "name": "lab_test_pcr_details_panel_idx",
+          "columns": [
+            {
+              "expression": "panel",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "lab_test_pcr_details_sample_type_idx": {
+          "name": "lab_test_pcr_details_sample_type_idx",
+          "columns": [
+            {
+              "expression": "sample_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "lab_test_pcr_details_lab_test_id_lab_tests_id_fk": {
+          "name": "lab_test_pcr_details_lab_test_id_lab_tests_id_fk",
+          "tableFrom": "lab_test_pcr_details",
+          "tableTo": "lab_tests",
+          "columnsFrom": [
+            "lab_test_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "lab_test_pcr_details_select_policy": {
+          "name": "lab_test_pcr_details_select_policy",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "public"
+          ],
+          "using": "\n      (COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true')\n      OR EXISTS (\n        SELECT 1\n        FROM lab_tests AS parent\n        WHERE parent.id = \"lab_test_pcr_details\".\"lab_test_id\"\n          AND (\n            (\n              parent.lab_id = NULLIF(current_setting('lis.active_lab_id', true), '')::uuid\n              AND EXISTS (\n                SELECT 1\n                FROM auth.lab_team_member AS ltm\n                WHERE ltm.lab_id = parent.lab_id\n                  AND ltm.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n              )\n            )\n            OR (\n              EXISTS (\n                SELECT 1\n                FROM auth.member AS m\n                WHERE m.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n                  AND m.role = 'org-owner'\n                  AND m.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n              )\n              AND EXISTS (\n                SELECT 1\n                FROM auth.labs AS l\n                WHERE l.id = parent.lab_id\n                  AND l.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n              )\n            )\n          )\n      )\n    "
+        },
+        "lab_test_pcr_details_insert_policy": {
+          "name": "lab_test_pcr_details_insert_policy",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "public"
+          ],
+          "withCheck": "\n      (COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true')\n      OR EXISTS (\n        SELECT 1\n        FROM lab_tests AS parent\n        WHERE parent.id = \"lab_test_pcr_details\".\"lab_test_id\"\n          AND (\n            (\n              parent.lab_id = NULLIF(current_setting('lis.active_lab_id', true), '')::uuid\n              AND EXISTS (\n                SELECT 1\n                FROM auth.lab_team_member AS ltm\n                WHERE ltm.lab_id = parent.lab_id\n                  AND ltm.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n              )\n            )\n            OR (\n              EXISTS (\n                SELECT 1\n                FROM auth.member AS m\n                WHERE m.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n                  AND m.role = 'org-owner'\n                  AND m.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n              )\n              AND EXISTS (\n                SELECT 1\n                FROM auth.labs AS l\n                WHERE l.id = parent.lab_id\n                  AND l.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n              )\n            )\n          )\n      )\n    "
+        },
+        "lab_test_pcr_details_update_policy": {
+          "name": "lab_test_pcr_details_update_policy",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "public"
+          ],
+          "using": "\n      (COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true')\n      OR EXISTS (\n        SELECT 1\n        FROM lab_tests AS parent\n        WHERE parent.id = \"lab_test_pcr_details\".\"lab_test_id\"\n          AND (\n            (\n              parent.lab_id = NULLIF(current_setting('lis.active_lab_id', true), '')::uuid\n              AND EXISTS (\n                SELECT 1\n                FROM auth.lab_team_member AS ltm\n                WHERE ltm.lab_id = parent.lab_id\n                  AND ltm.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n              )\n            )\n            OR (\n              EXISTS (\n                SELECT 1\n                FROM auth.member AS m\n                WHERE m.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n                  AND m.role = 'org-owner'\n                  AND m.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n              )\n              AND EXISTS (\n                SELECT 1\n                FROM auth.labs AS l\n                WHERE l.id = parent.lab_id\n                  AND l.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n              )\n            )\n          )\n      )\n    ",
+          "withCheck": "\n      (COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true')\n      OR EXISTS (\n        SELECT 1\n        FROM lab_tests AS parent\n        WHERE parent.id = \"lab_test_pcr_details\".\"lab_test_id\"\n          AND (\n            (\n              parent.lab_id = NULLIF(current_setting('lis.active_lab_id', true), '')::uuid\n              AND EXISTS (\n                SELECT 1\n                FROM auth.lab_team_member AS ltm\n                WHERE ltm.lab_id = parent.lab_id\n                  AND ltm.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n              )\n            )\n            OR (\n              EXISTS (\n                SELECT 1\n                FROM auth.member AS m\n                WHERE m.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n                  AND m.role = 'org-owner'\n                  AND m.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n              )\n              AND EXISTS (\n                SELECT 1\n                FROM auth.labs AS l\n                WHERE l.id = parent.lab_id\n                  AND l.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n              )\n            )\n          )\n      )\n    "
+        },
+        "lab_test_pcr_details_delete_policy": {
+          "name": "lab_test_pcr_details_delete_policy",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "public"
+          ],
+          "using": "\n      (COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true')\n      OR EXISTS (\n        SELECT 1\n        FROM lab_tests AS parent\n        WHERE parent.id = \"lab_test_pcr_details\".\"lab_test_id\"\n          AND (\n            (\n              parent.lab_id = NULLIF(current_setting('lis.active_lab_id', true), '')::uuid\n              AND EXISTS (\n                SELECT 1\n                FROM auth.lab_team_member AS ltm\n                WHERE ltm.lab_id = parent.lab_id\n                  AND ltm.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n              )\n            )\n            OR (\n              EXISTS (\n                SELECT 1\n                FROM auth.member AS m\n                WHERE m.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n                  AND m.role = 'org-owner'\n                  AND m.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n              )\n              AND EXISTS (\n                SELECT 1\n                FROM auth.labs AS l\n                WHERE l.id = parent.lab_id\n                  AND l.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n              )\n            )\n          )\n      )\n    "
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.lab_tests": {
+      "name": "lab_tests",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "lab_id": {
+          "name": "lab_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "lab_test_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PCR'"
+        },
+        "test_code": {
+          "name": "test_code",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "test_name": {
+          "name": "test_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "loinc_code": {
+          "name": "loinc_code",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cpt_code": {
+          "name": "cpt_code",
+          "type": "varchar(5)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "default_clinical_notes": {
+          "name": "default_clinical_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "lab_tests_lab_idx": {
+          "name": "lab_tests_lab_idx",
+          "columns": [
+            {
+              "expression": "lab_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "lab_tests_lab_id_labs_id_fk": {
+          "name": "lab_tests_lab_id_labs_id_fk",
+          "tableFrom": "lab_tests",
+          "tableTo": "labs",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "lab_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "lab_tests_test_code_unique": {
+          "name": "lab_tests_test_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "test_code"
+          ]
+        }
+      },
+      "policies": {
+        "lab_tests_select_policy": {
+          "name": "lab_tests_select_policy",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "public"
+          ],
+          "using": "\n      (COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true')\n      OR (\n      \"lab_tests\".\"lab_id\" = NULLIF(current_setting('lis.active_lab_id', true), '')::uuid\n      AND EXISTS (\n        SELECT 1\n        FROM auth.lab_team_member AS ltm\n        WHERE ltm.lab_id = \"lab_tests\".\"lab_id\"\n          AND ltm.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n      )\n    )\n      OR (\n      EXISTS (\n        SELECT 1\n        FROM auth.member AS m\n        WHERE m.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n          AND m.role = 'org-owner'\n          AND m.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n      )\n      AND EXISTS (\n        SELECT 1\n        FROM auth.labs AS l\n        WHERE l.id = \"lab_tests\".\"lab_id\"\n          AND l.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n      )\n    )\n    "
+        },
+        "lab_tests_insert_policy": {
+          "name": "lab_tests_insert_policy",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "public"
+          ],
+          "withCheck": "\n      (COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true')\n      OR (\n      \"lab_tests\".\"lab_id\" = NULLIF(current_setting('lis.active_lab_id', true), '')::uuid\n      AND EXISTS (\n        SELECT 1\n        FROM auth.lab_team_member AS ltm\n        WHERE ltm.lab_id = \"lab_tests\".\"lab_id\"\n          AND ltm.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n      )\n    )\n      OR (\n      EXISTS (\n        SELECT 1\n        FROM auth.member AS m\n        WHERE m.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n          AND m.role = 'org-owner'\n          AND m.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n      )\n      AND EXISTS (\n        SELECT 1\n        FROM auth.labs AS l\n        WHERE l.id = \"lab_tests\".\"lab_id\"\n          AND l.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n      )\n    )\n    "
+        },
+        "lab_tests_update_policy": {
+          "name": "lab_tests_update_policy",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "public"
+          ],
+          "using": "\n      (COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true')\n      OR (\n      \"lab_tests\".\"lab_id\" = NULLIF(current_setting('lis.active_lab_id', true), '')::uuid\n      AND EXISTS (\n        SELECT 1\n        FROM auth.lab_team_member AS ltm\n        WHERE ltm.lab_id = \"lab_tests\".\"lab_id\"\n          AND ltm.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n      )\n    )\n      OR (\n      EXISTS (\n        SELECT 1\n        FROM auth.member AS m\n        WHERE m.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n          AND m.role = 'org-owner'\n          AND m.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n      )\n      AND EXISTS (\n        SELECT 1\n        FROM auth.labs AS l\n        WHERE l.id = \"lab_tests\".\"lab_id\"\n          AND l.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n      )\n    )\n    ",
+          "withCheck": "\n      (COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true')\n      OR (\n      \"lab_tests\".\"lab_id\" = NULLIF(current_setting('lis.active_lab_id', true), '')::uuid\n      AND EXISTS (\n        SELECT 1\n        FROM auth.lab_team_member AS ltm\n        WHERE ltm.lab_id = \"lab_tests\".\"lab_id\"\n          AND ltm.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n      )\n    )\n      OR (\n      EXISTS (\n        SELECT 1\n        FROM auth.member AS m\n        WHERE m.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n          AND m.role = 'org-owner'\n          AND m.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n      )\n      AND EXISTS (\n        SELECT 1\n        FROM auth.labs AS l\n        WHERE l.id = \"lab_tests\".\"lab_id\"\n          AND l.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n      )\n    )\n    "
+        },
+        "lab_tests_delete_policy": {
+          "name": "lab_tests_delete_policy",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "public"
+          ],
+          "using": "\n      (COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true')\n      OR (\n      \"lab_tests\".\"lab_id\" = NULLIF(current_setting('lis.active_lab_id', true), '')::uuid\n      AND EXISTS (\n        SELECT 1\n        FROM auth.lab_team_member AS ltm\n        WHERE ltm.lab_id = \"lab_tests\".\"lab_id\"\n          AND ltm.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n      )\n    )\n      OR (\n      EXISTS (\n        SELECT 1\n        FROM auth.member AS m\n        WHERE m.user_id = NULLIF(current_setting('lis.current_user_id', true), '')::uuid\n          AND m.role = 'org-owner'\n          AND m.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n      )\n      AND EXISTS (\n        SELECT 1\n        FROM auth.labs AS l\n        WHERE l.id = \"lab_tests\".\"lab_id\"\n          AND l.organization_id = NULLIF(current_setting('lis.active_organization_id', true), '')::uuid\n      )\n    )\n    "
+        }
+      },
+      "checkConstraints": {
+        "lab_tests_test_code_format": {
+          "name": "lab_tests_test_code_format",
+          "value": "\"lab_tests\".\"test_code\" ~ '^PCR-[0-9]{3}-[0-9]{2}$'"
+        },
+        "lab_tests_loinc_format": {
+          "name": "lab_tests_loinc_format",
+          "value": "\"lab_tests\".\"loinc_code\" IS NULL OR \"lab_tests\".\"loinc_code\" ~ '^[0-9]{5}-[0-9]$'"
+        },
+        "lab_tests_cpt_format": {
+          "name": "lab_tests_cpt_format",
+          "value": "\"lab_tests\".\"cpt_code\" IS NULL OR \"lab_tests\".\"cpt_code\" ~ '^[0-9]{5}$'"
+        },
+        "lab_tests_price_positive": {
+          "name": "lab_tests_price_positive",
+          "value": "\"lab_tests\".\"price\" >= 0"
+        }
+      },
+      "isRLSEnabled": true
+    }
+  },
+  "enums": {
+    "auth.organization_role_enum": {
+      "name": "organization_role_enum",
+      "schema": "auth",
+      "values": [
+        "org-owner",
+        "lab-admin",
+        "lab-cls",
+        "lab-technician",
+        "lab-doctor",
+        "lab-receptionist"
+      ]
+    },
+    "public.lab_test_panel": {
+      "name": "lab_test_panel",
+      "schema": "public",
+      "values": [
+        "Respiratory",
+        "Pneumonia",
+        "Gastrointestinal (GI)",
+        "Blood Culture",
+        "Meningitis / Encephalitis",
+        "STI",
+        "Nail / Fungal",
+        "UTI",
+        "Wound / Tissue",
+        "Women's Health",
+        "Antimicrobial Resistance",
+        "COVID/Flu/RSV"
+      ]
+    },
+    "public.lab_test_sample_type": {
+      "name": "lab_test_sample_type",
+      "schema": "public",
+      "values": [
+        "Nasopharyngeal Swab",
+        "Oropharyngeal Swab",
+        "Sputum",
+        "Stool",
+        "Urine",
+        "Vaginal Swab",
+        "Cervical Swab",
+        "Whole Blood",
+        "Plasma",
+        "Serum",
+        "Cerebrospinal Fluid (CSF)",
+        "Tissue Biopsy",
+        "Wound Swab",
+        "Nail Clipping",
+        "Skin Scrapings"
+      ]
+    },
+    "public.lab_test_type": {
+      "name": "lab_test_type",
+      "schema": "public",
+      "values": [
+        "PCR"
+      ]
+    }
+  },
+  "schemas": {
+    "auth": "auth"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
