@@ -2,8 +2,8 @@ import { checkPermission, requirePermission } from "@/lib/server-permissions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PermissionGuard } from "@/components/permission-guard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LabsTable } from "@/components/labs-table";
-import { InviteForm } from "@/components/forms/invite-form";
+import { LabsTable } from "./_components/labs-table";
+import { InviteForm } from "./_components/invite-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { headers } from "next/headers";
@@ -13,8 +13,8 @@ import { IconFlask, IconUsers, IconUserPlus } from "@tabler/icons-react";
 import { safeGetLabTeamMemberships, safeFindPendingInvitations } from "@/lib/helpers/db-helpers";
 import { tryCatch } from "@/lib/try-catch";
 import { formatRoleLabel } from "@/lib/utils";
-import { OrganizationMemberWithUser, TeamMembersTable } from "@/components/team-members-table";
-import { InvitationsTable } from "@/components/invitations-table";
+import { OrganizationMemberWithUser, TeamMembersTable } from "./_components/team-members-table";
+import { InvitationsTable } from "./_components/invitations-table";
 
 interface LabsPageProps {
   params: Promise<{ orgSlug: string }>;

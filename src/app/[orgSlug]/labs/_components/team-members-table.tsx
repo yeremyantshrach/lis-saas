@@ -48,7 +48,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { IconEdit, IconMail, IconTrash } from "@tabler/icons-react";
 import { formatRoleLabel, getInitials } from "@/lib/utils";
-import { EditMemberForm } from "@/components/forms/edit-member-form";
+import { EditMemberForm } from "./edit-member-form";
 import { removeMemberAction } from "@/lib/actions/member-actions";
 import { type Lab } from "@/lib/auth-client";
 

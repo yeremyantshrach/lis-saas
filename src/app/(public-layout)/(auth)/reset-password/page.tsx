@@ -1,5 +1,5 @@
 import { redirectIfAuthenticated } from "@/lib/auth/auth-redirects";
-import { ResetPasswordForm } from "@/components/auth/reset-password-form";
+import { ResetPasswordForm } from "./_components/reset-password-form";
 
 interface ResetPasswordPageProps {
   searchParams: Promise<{ token?: string }>;

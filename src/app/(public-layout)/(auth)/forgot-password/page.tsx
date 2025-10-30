@@ -1,5 +1,5 @@
 import { redirectIfAuthenticated } from "@/lib/auth/auth-redirects";
-import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
+import { ForgotPasswordForm } from "./_components/forgot-password-form";
 
 interface ForgotPasswordPageProps {
   searchParams: Promise<{ email?: string }>;

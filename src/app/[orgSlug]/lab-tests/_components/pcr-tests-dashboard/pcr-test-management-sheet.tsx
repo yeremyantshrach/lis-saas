@@ -5,7 +5,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { CreatePcrTestForm } from "@/components/lab-tests/create-pcr-test-form";
+import { CreatePcrTestForm } from "./create-pcr-test-form";
 import type { PcrLabTestRecord } from "@/lib/helpers/lab-tests-helpers";
 
 interface PcrTestManagementSheetProps {

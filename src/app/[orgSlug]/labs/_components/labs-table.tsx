@@ -12,8 +12,8 @@ import {
 import { type Lab } from "@/lib/auth-client";
 import { deleteLabAction } from "@/lib/actions/delete-lab-action";
 import { PermissionGuard } from "@/components/permission-guard";
-import { CreateLabForm } from "@/components/forms/create-lab-form";
-import { EditLabForm } from "@/components/forms/edit-lab-form";
+import { CreateLabForm } from "./create-lab-form";
+import { EditLabForm } from "./edit-lab-form";
 import {
   Dialog,
   DialogContent,

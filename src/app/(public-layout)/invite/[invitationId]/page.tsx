@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { AcceptInvitationCard } from "@/components/accept-invitation-card";
+import { AcceptInvitationCard } from "./_components/accept-invitation-card";
 import { tryCatch } from "@/lib/try-catch";
 import { APIError } from "better-auth/api";
 import { safeGetLabById } from "@/lib/helpers";
