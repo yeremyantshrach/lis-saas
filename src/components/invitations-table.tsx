@@ -345,11 +345,7 @@ export function InvitationsTable({ invitations }: InvitationsTableProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Keep Invitation</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={handleCancel}
-              disabled={isPending}
-            >
+            <AlertDialogAction variant="destructive" onClick={handleCancel} disabled={isPending}>
               {isPending ? "Cancelling..." : "Cancel Invitation"}
             </AlertDialogAction>
           </AlertDialogFooter>

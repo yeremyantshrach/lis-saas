@@ -17,11 +17,8 @@ import {
   LAB_TEST_TYPES,
   PCR_SAMPLE_TYPES,
   PCR_TEST_PANELS,
-  type LabTestType,
   type PcrPathogenTarget,
   type PcrResistanceMarker,
-  type PcrSampleType,
-  type PcrTestPanel,
 } from "@/lib/lab-tests/constants";
 
 export const labTestTypeEnum = pgEnum("lab_test_type", LAB_TEST_TYPES);

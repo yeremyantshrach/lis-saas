@@ -1,4 +1,3 @@
-import type { PropsWithChildren } from "react";
 import { redirect } from "next/navigation";
 import { CSSProperties } from "react";
 import { getPostAuthRedirect, requireAuthenticated } from "@/lib/auth/auth-redirects";

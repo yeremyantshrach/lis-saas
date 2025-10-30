@@ -24,6 +24,6 @@ export async function updateLabAction(teamId: string, data: z.infer<typeof creat
     revalidatePath("/[orgSlug]/labs", "page");
     return { success: true, data: result };
   } catch (error) {
-    return { success: false, error: "Failed to update lab" };
+    return { success: false, error: (error as Error)?.message || "Failed to update lab" };
   }
 }

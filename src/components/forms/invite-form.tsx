@@ -68,7 +68,7 @@ export function InviteForm({ orgSlug, labs }: InviteFormProps) {
         form.setError("root", { message: result.error });
       }
     } catch (error) {
-      form.setError("root", { message: "Something went wrong" });
+      form.setError("root", { message: (error as Error)?.message || "Something went wrong" });
     } finally {
       setIsLoading(false);
     }

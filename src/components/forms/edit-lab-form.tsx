@@ -43,7 +43,7 @@ export function EditLabForm({ lab, onSuccess }: EditLabFormProps) {
           form.setError("root", { message: result.error });
         }
       } catch (error) {
-        form.setError("root", { message: "Something went wrong" });
+        form.setError("root", { message: (error as Error)?.message || "Something went wrong" });
       }
     });
   }

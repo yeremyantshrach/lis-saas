@@ -3,7 +3,7 @@
 import { signupSchema, type SignupFormData } from "@/lib/validations/auth";
 import { APIError } from "better-auth/api";
 import { ZodError, z } from "zod";
-import { safeSendVerificationEmail, safeSignUpEmail } from "@/lib/helpers/auth-helpers";
+import { safeSignUpEmail } from "@/lib/helpers/auth-helpers";
 import {
   createSuccessResult,
   createErrorResult,

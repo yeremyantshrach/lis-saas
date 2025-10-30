@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { requirePermission, checkPermission } from "@/lib/server-permissions";
 import { listAccessiblePcrTests } from "@/lib/helpers/lab-tests-helpers";
-import { PcrTestsDashboard } from "@/components/lab-tests/pcr-tests-dashboard";
+import { PcrTestsDashboard } from "./_components/pcr-tests-dashboard";
 import { auth } from "@/lib/auth";
 import { tryCatch } from "@/lib/try-catch";
 import { safeGetLabById } from "@/lib/helpers/db-helpers";
