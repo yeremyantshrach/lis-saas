@@ -1,5 +1,5 @@
 import { redirectIfAuthenticated } from "@/lib/auth/auth-redirects";
-import { SignupForm } from "@/components/auth/signup-form";
+import { SignupForm } from "./_components/signup-form";
 
 interface SignupPageProps {
   searchParams: Promise<{ invitationId?: string }>;

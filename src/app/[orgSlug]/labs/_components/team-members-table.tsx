@@ -48,7 +48,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { IconEdit, IconMail, IconTrash } from "@tabler/icons-react";
 import { formatRoleLabel, getInitials } from "@/lib/utils";
-import { EditMemberForm } from "@/components/forms/edit-member-form";
+import { EditMemberForm } from "./edit-member-form";
 import { removeMemberAction } from "@/lib/actions/member-actions";
 import { type Lab } from "@/lib/auth-client";
 
@@ -441,6 +441,7 @@ export function TeamMembersTable({ members, userId, labs = [], userRole }: TeamM
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
+              variant="destructive"
               onClick={() => {
                 if (!deletingMember) return;
                 startTransition(async () => {
@@ -450,7 +451,6 @@ export function TeamMembersTable({ members, userId, labs = [], userRole }: TeamM
                 });
               }}
               disabled={isPending}
-              className="bg-destructive text-primary-foreground hover:bg-destructive/90"
             >
               {isPending ? "Removing..." : "Remove Member"}
             </AlertDialogAction>

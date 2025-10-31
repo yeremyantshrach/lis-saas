@@ -1,4 +1,3 @@
-import type { PropsWithChildren } from "react";
 import { redirect } from "next/navigation";
 import { CSSProperties } from "react";
 import { getPostAuthRedirect, requireAuthenticated } from "@/lib/auth/auth-redirects";
@@ -6,10 +5,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-export default async function OrganizationLayout({
-  children,
-  params,
-}: PropsWithChildren<PageProps<"/[orgSlug]/dashboard">>) {
+export default async function OrganizationLayout({ children, params }: LayoutProps<"/[orgSlug]">) {
   const { orgSlug } = await params;
   const session = await requireAuthenticated(`/${orgSlug}`);
 

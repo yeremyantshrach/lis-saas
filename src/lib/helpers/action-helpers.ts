@@ -22,11 +22,11 @@ export function createSuccessResult<T>(
   };
 }
 
-export function createErrorResult(
+export function createErrorResult<T = unknown>(
   error: string,
   errors?: Record<string, string[]>,
   redirectUrl?: string,
-): ActionResult {
+): ActionResult<T> {
   return {
     success: false,
     error,

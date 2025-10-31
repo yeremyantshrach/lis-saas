@@ -1,5 +1,5 @@
 import { redirectIfAuthenticated } from "@/lib/auth/auth-redirects";
-import { VerifyEmailCard } from "@/components/auth/verify-email-card";
+import { VerifyEmailCard } from "./_components/verify-email-card";
 
 interface VerifyEmailPageProps {
   searchParams: Promise<{ email?: string }>;

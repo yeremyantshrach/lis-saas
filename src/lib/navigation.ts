@@ -6,8 +6,7 @@ import {
   IconFileDescription,
   IconChartBar,
   IconCreditCard,
-  IconUserPlus,
-  IconBuilding,
+  IconMicroscope,
   type Icon,
 } from "@tabler/icons-react";
 import type { Permission } from "./permissions";
@@ -32,6 +31,12 @@ export function getNavigationItems(orgSlug: string): NavItem[] {
       url: `/${orgSlug}/labs`,
       icon: IconFlask,
       requiredPermission: "team:read",
+    },
+    {
+      title: "Lab Tests",
+      url: `/${orgSlug}/lab-tests`,
+      icon: IconMicroscope,
+      requiredPermission: "labTests:read",
     },
     {
       title: "Orders",

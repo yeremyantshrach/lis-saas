@@ -1,5 +1,5 @@
 import { redirectIfAuthenticated } from "@/lib/auth/auth-redirects";
-import { SignInForm } from "@/components/auth/sign-in-form";
+import { SignInForm } from "./_components/sign-in-form";
 
 interface SignInPageProps {
   searchParams: Promise<{ invitationId?: string; verified?: string; reset?: string }>;

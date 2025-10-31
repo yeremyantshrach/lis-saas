@@ -13,38 +13,37 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { createLabAction } from "@/lib/actions/lab-actions";
-import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { createLabSchema } from "@/lib/validations/labs";
+import { updateLabAction } from "@/lib/actions/update-lab-action";
+import { Lab } from "@/lib/auth-client";
 
-interface CreateLabFormProps {
-  onClose: () => void;
+interface EditLabFormProps {
+  lab: Lab;
+  onSuccess?: () => void;
 }
 
-export function CreateLabForm({ onClose }: CreateLabFormProps) {
-  const router = useRouter();
+export function EditLabForm({ lab, onSuccess }: EditLabFormProps) {
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof createLabSchema>>({
     resolver: zodResolver(createLabSchema),
     defaultValues: {
-      name: "",
+      name: lab.name,
     },
   });
 
   function onSubmit(values: z.infer<typeof createLabSchema>) {
     startTransition(async () => {
       try {
-        const result = await createLabAction(values);
+        const result = await updateLabAction(lab.id, values);
         if (result.success) {
-          router.refresh();
-          onClose();
+          onSuccess?.();
         } else {
           form.setError("root", { message: result.error });
         }
       } catch (error) {
-        form.setError("root", { message: "Something went wrong" });
+        form.setError("root", { message: (error as Error)?.message || "Something went wrong" });
       }
     });
   }
@@ -72,10 +71,7 @@ export function CreateLabForm({ onClose }: CreateLabFormProps) {
 
         <div className="flex gap-2">
           <Button type="submit" disabled={isPending}>
-            {isPending ? "Creating..." : "Create Lab"}
-          </Button>
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
+            {isPending ? "Updating..." : "Update Lab"}
           </Button>
         </div>
       </form>

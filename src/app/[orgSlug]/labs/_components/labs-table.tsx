@@ -12,8 +12,8 @@ import {
 import { type Lab } from "@/lib/auth-client";
 import { deleteLabAction } from "@/lib/actions/delete-lab-action";
 import { PermissionGuard } from "@/components/permission-guard";
-import { CreateLabForm } from "@/components/forms/create-lab-form";
-import { EditLabForm } from "@/components/forms/edit-lab-form";
+import { CreateLabForm } from "./create-lab-form";
+import { EditLabForm } from "./edit-lab-form";
 import {
   Dialog,
   DialogContent,
@@ -337,7 +337,11 @@ export function LabsTable({ labs, canManageLabs }: LabsTableProps) {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} disabled={isPending}>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={isPending}
+                  variant="destructive"
+                >
                   {isPending ? "Deleting..." : "Delete"}
                 </AlertDialogAction>
               </AlertDialogFooter>
