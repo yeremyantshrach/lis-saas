@@ -5,6 +5,10 @@ import { CreateOrganizationForm } from "./_components/create-organization-form";
 export default async function OnboardingPage() {
   const session = await requireAuthenticated("/onboarding");
 
+  if (session.user.isGlobalAdmin || session.user.role === "admin") {
+    redirect("/admin");
+  }
+
   const activeOrgSlug = session.session?.activeOrganizationSlug;
 
   if (activeOrgSlug) {

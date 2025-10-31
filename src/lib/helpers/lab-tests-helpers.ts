@@ -18,6 +18,7 @@ export interface LabTestRlsContext {
   userId: string;
   organizationId: string | null;
   labId: string | null;
+  isGlobalAdmin?: boolean;
 }
 
 export interface CreatePcrTestInput {
@@ -64,13 +65,16 @@ export interface PcrLabTestRecord {
 }
 
 async function applyLabTestRlsContext(tx: Transaction, context: LabTestRlsContext) {
-  const { userId, organizationId, labId } = context;
+  const { userId, organizationId, labId, isGlobalAdmin } = context;
 
   await tx.execute(sql`select set_config('lis.current_user_id', ${userId ?? ""}, true) as ignored`);
   await tx.execute(
     sql`select set_config('lis.active_organization_id', ${organizationId ?? ""}, true) as ignored`,
   );
   await tx.execute(sql`select set_config('lis.active_lab_id', ${labId ?? ""}, true) as ignored`);
+  await tx.execute(
+    sql`select set_config('lis.is_global_admin', ${isGlobalAdmin ? "true" : "false"}, true) as ignored`,
+  );
 }
 
 export async function listAccessiblePcrTests(context: LabTestRlsContext) {
