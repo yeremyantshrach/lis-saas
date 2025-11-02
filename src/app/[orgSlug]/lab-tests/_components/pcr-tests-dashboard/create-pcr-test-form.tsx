@@ -354,11 +354,9 @@ export function CreatePcrTestForm({
   };
 
   const disabled = isPending;
-  const isFormValid = form.formState.isValid;
   const submitLabel = disabled ? "Saving..." : mode === "edit" ? "Save changes" : "Save PCR Test";
   const resetLabel = mode === "edit" ? "Reset changes" : "Reset form";
   const labSelectDisabled = disabled || mode === "edit";
-  const submitDisabled = disabled || !isFormValid;
   const requiredIndicator = <span className="text-destructive ml-1">*</span>;
 
   const pathogenTargetsError =
@@ -1067,7 +1065,7 @@ export function CreatePcrTestForm({
           ) : null}
 
           <div className="flex gap-2 border-t pt-4">
-            <Button type="submit" disabled={submitDisabled} className="min-w-[160px]">
+            <Button type="submit" className="min-w-[160px]">
               {submitLabel}
             </Button>
             <Button
