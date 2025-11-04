@@ -10,7 +10,7 @@ BEGIN
       AND e.enumlabel = 'lab-doctor'
   ) THEN
     EXECUTE 'ALTER TYPE auth.organization_role_enum RENAME VALUE ''lab-doctor'' TO ''doctor''';
-  END IF;
+END IF;
 
   IF EXISTS (
     SELECT 1
@@ -22,5 +22,5 @@ BEGIN
       AND e.enumlabel = 'lab-receptionist'
   ) THEN
     EXECUTE 'ALTER TYPE auth.organization_role_enum RENAME VALUE ''lab-receptionist'' TO ''receptionist''';
-  END IF;
+END IF;
 END $$;

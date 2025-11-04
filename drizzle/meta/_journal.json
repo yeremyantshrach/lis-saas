@@ -24,10 +24,10 @@
       "breakpoints": true
     },
     {
-      "idx": 2,
+      "idx": 3,
       "version": "7",
-      "when": 1762296233870,
-      "tag": "0002_perpetual_morgan_stark",
+      "when": 1762297903846,
+      "tag": "0003_light_maginty",
       "breakpoints": true
     }
   ]
