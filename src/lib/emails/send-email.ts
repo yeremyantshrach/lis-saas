@@ -15,7 +15,6 @@ interface SendEmailOptions {
 }
 
 export async function sendEmail({ from = env.resend.fromEmail, ...options }: SendEmailOptions) {
-  console.log("Sending email with options:", { from, ...options });
   if (!from) {
     throw new Error("No from email configured for Resend");
   }

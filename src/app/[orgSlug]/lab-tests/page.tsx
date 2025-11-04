@@ -4,7 +4,11 @@ import { listAccessiblePcrTests } from "@/lib/helpers/lab-tests-helpers";
 import { PcrTestsDashboard } from "./_components/pcr-tests-dashboard";
 import { auth } from "@/lib/auth";
 import { tryCatch } from "@/lib/try-catch";
-import { safeGetLabById } from "@/lib/helpers/db-helpers";
+import {
+  safeGetLabById,
+  safeGetLabTeamMemberships,
+  safeGetUserMember,
+} from "@/lib/helpers/db-helpers";
 
 export default async function LabTestsPage({ params }: PageProps<"/[orgSlug]/lab-tests">) {
   const { orgSlug } = await params;
@@ -14,7 +18,7 @@ export default async function LabTestsPage({ params }: PageProps<"/[orgSlug]/lab
   const isGlobalAdmin = session.user.isGlobalAdmin ?? false;
   const activeLabId = session.session?.activeLabId ?? null;
 
-  const tests =
+  let tests =
     organizationId || isGlobalAdmin
       ? await listAccessiblePcrTests({
           userId: session.user.id,
@@ -35,10 +39,39 @@ export default async function LabTestsPage({ params }: PageProps<"/[orgSlug]/lab
     ? labsResponse.map((lab) => ({ id: lab.id, name: lab.name }))
     : [];
 
+  const [userMember] = organizationId
+    ? await safeGetUserMember(session.user.id, organizationId)
+    : [null];
+  const isOrgOwner = userMember?.role === "org-owner";
+
+  if (!isOrgOwner) {
+    const labIds = labs.map((lab) => lab.id);
+    const [memberships] =
+      labIds.length > 0 && organizationId
+        ? await safeGetLabTeamMemberships(organizationId, labIds)
+        : [[]];
+
+    const accessibleLabIds = new Set<string>();
+
+    for (const membership of memberships ?? []) {
+      if (membership.userId === session.user.id) {
+        accessibleLabIds.add(membership.labId);
+      }
+    }
+
+    if (activeLabId) {
+      accessibleLabIds.add(activeLabId);
+    }
+
+    labs = labs.filter((lab) => accessibleLabIds.has(lab.id));
+    tests = tests.filter((test) => accessibleLabIds.has(test.labId));
+  }
+
   if (labs.length === 0 && activeLabId) {
     const [labRecord] = await safeGetLabById(activeLabId);
     if (labRecord) {
       labs = [{ id: labRecord.id, name: labRecord.name }];
+      tests = tests.filter((test) => test.labId === labRecord.id);
     }
   }
 

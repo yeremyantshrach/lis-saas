@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState, useTransition } from "react";
-import { useForm, useFieldArray, type FieldPath } from "react-hook-form";
+import { useCallback, useEffect, useId, useMemo, useState, useTransition } from "react";
+import { useForm, useFieldArray, type DefaultValues, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { createPcrTestSchema, type CreatePcrTestFormValues } from "@/lib/validations/lab-tests";
@@ -151,33 +151,53 @@ export function CreatePcrTestForm({
   const labOptions = useMemo(() => labs, [labs]);
   const shouldShowLabSelect = labOptions.length > 1;
 
-  const fallbackPathogen: CreatePcrTestFormValues["pathogenTargets"][number] = useMemo(
-    () => ({
+  type PathogenTargetDefault = NonNullable<
+    DefaultValues<CreatePcrTestFormValues>["pathogenTargets"]
+  >[number];
+
+  type ResistanceMarkerDefault = NonNullable<
+    DefaultValues<CreatePcrTestFormValues>["resistanceMarkers"]
+  >[number];
+
+  const createEmptyPathogen = useCallback(
+    (): PathogenTargetDefault => ({
       name: "",
-      category: PATHOGEN_CATEGORIES[0],
+      category: undefined,
       clinicalSignificance: undefined,
     }),
     [],
   );
 
-  const defaultValues = useMemo<CreatePcrTestFormValues>(() => {
+  const createEmptyResistanceMarker = useCallback(
+    (): ResistanceMarkerDefault => ({
+      markerName: "",
+      gene: "",
+      antibioticClass: undefined,
+      clinicalImplication: undefined,
+    }),
+    [],
+  );
+
+  const defaultValues = useMemo<DefaultValues<CreatePcrTestFormValues>>(() => {
     if (mode === "edit" && initialData) {
-      const sanitizedPathogens: CreatePcrTestFormValues["pathogenTargets"] = (
-        initialData.pathogenTargets.length > 0 ? initialData.pathogenTargets : [fallbackPathogen]
+      const sanitizedPathogens: PathogenTargetDefault[] = (
+        initialData.pathogenTargets.length > 0
+          ? initialData.pathogenTargets
+          : [createEmptyPathogen()]
       ).map((pathogen) => ({
-        name: pathogen.name,
-        category: pathogen.category,
-        clinicalSignificance: pathogen.clinicalSignificance ?? undefined,
+        name: pathogen?.name ?? "",
+        category: pathogen?.category ?? undefined,
+        clinicalSignificance: pathogen?.clinicalSignificance ?? undefined,
       }));
 
-      const sanitizedMarkers: CreatePcrTestFormValues["resistanceMarkers"] = (
-        initialData.resistanceMarkers ?? []
-      ).map((marker) => ({
-        markerName: marker.markerName,
-        gene: marker.gene,
-        antibioticClass: marker.antibioticClass,
-        clinicalImplication: marker.clinicalImplication ?? undefined,
-      }));
+      const sanitizedMarkers: ResistanceMarkerDefault[] = (initialData.resistanceMarkers ?? []).map(
+        (marker) => ({
+          markerName: marker.markerName,
+          gene: marker.gene,
+          antibioticClass: marker.antibioticClass ?? undefined,
+          clinicalImplication: marker.clinicalImplication ?? undefined,
+        }),
+      );
 
       return {
         labId: initialData.labId,
@@ -200,10 +220,10 @@ export function CreatePcrTestForm({
       labId: defaultLabId ?? (labOptions.length === 1 ? labOptions[0]?.id : undefined),
       testName: "",
       testCode: undefined,
-      panel: PCR_TEST_PANELS[0],
-      sampleType: PCR_SAMPLE_TYPES[0],
+      panel: undefined,
+      sampleType: undefined,
       price: "",
-      pathogenTargets: [fallbackPathogen],
+      pathogenTargets: [createEmptyPathogen()],
       resistanceMarkers: [],
       loincCode: undefined,
       cptCode: undefined,
@@ -211,12 +231,12 @@ export function CreatePcrTestForm({
       defaultClinicalNotes: undefined,
       orgSlug,
     };
-  }, [mode, initialData, defaultLabId, labOptions, orgSlug, fallbackPathogen]);
+  }, [mode, initialData, defaultLabId, labOptions, orgSlug, createEmptyPathogen]);
 
   const form = useForm<CreatePcrTestFormValues>({
     resolver: zodResolver(createPcrTestSchema),
     defaultValues,
-    mode: "onBlur",
+    mode: "onSubmit",
     reValidateMode: "onBlur",
   });
 
@@ -322,12 +342,10 @@ export function CreatePcrTestForm({
                 : undefined,
             testName: "",
             testCode: undefined,
-            panel: values.panel,
-            sampleType: values.sampleType,
+            panel: undefined,
+            sampleType: undefined,
             price: "",
-            pathogenTargets: [
-              { name: "", category: PATHOGEN_CATEGORIES[0], clinicalSignificance: undefined },
-            ],
+            pathogenTargets: [createEmptyPathogen()],
             resistanceMarkers: [],
             loincCode: undefined,
             cptCode: undefined,
@@ -372,7 +390,6 @@ export function CreatePcrTestForm({
     "message" in form.formState.errors.resistanceMarkers
       ? (form.formState.errors.resistanceMarkers.message as string | undefined)
       : undefined;
-
   return (
     <Form {...form}>
       <TooltipProvider delayDuration={150}>
@@ -589,11 +606,9 @@ export function CreatePcrTestForm({
                   size="sm"
                   variant="outline"
                   onClick={() =>
-                    appendPathogen({
-                      name: "",
-                      category: PATHOGEN_CATEGORIES[0],
-                      clinicalSignificance: undefined,
-                    })
+                    appendPathogen(
+                      createEmptyPathogen() as CreatePcrTestFormValues["pathogenTargets"][number],
+                    )
                   }
                   disabled={disabled}
                   className="sm:self-start"
@@ -740,12 +755,11 @@ export function CreatePcrTestForm({
                   size="sm"
                   variant="outline"
                   onClick={() =>
-                    appendResistanceMarker({
-                      markerName: "",
-                      gene: "",
-                      antibioticClass: "",
-                      clinicalImplication: undefined,
-                    })
+                    appendResistanceMarker(
+                      createEmptyResistanceMarker() as NonNullable<
+                        CreatePcrTestFormValues["resistanceMarkers"]
+                      >[number],
+                    )
                   }
                   disabled={disabled}
                   className="sm:self-start"
@@ -851,7 +865,7 @@ export function CreatePcrTestForm({
                                       </FormLabel>
                                       <Select
                                         disabled={disabled}
-                                        value={field.value ?? ""}
+                                        value={field.value}
                                         onValueChange={(value) => field.onChange(value)}
                                       >
                                         <FormControl>

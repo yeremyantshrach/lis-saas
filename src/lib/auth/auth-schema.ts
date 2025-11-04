@@ -7,8 +7,8 @@ export const organizationRoleEnum = authSchema.enum("organization_role_enum", [
   "lab-admin",
   "lab-cls",
   "lab-technician",
-  "lab-doctor",
-  "lab-receptionist",
+  "doctor",
+  "receptionist",
 ]);
 
 export const user = authSchema.table("user", {

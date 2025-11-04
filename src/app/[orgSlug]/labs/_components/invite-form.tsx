@@ -116,8 +116,8 @@ export function InviteForm({ orgSlug, labs }: InviteFormProps) {
                   <SelectItem value="lab-admin">Lab Admin</SelectItem>
                   <SelectItem value="lab-cls">Clinical Laboratory Scientist</SelectItem>
                   <SelectItem value="lab-technician">Laboratory Technician</SelectItem>
-                  <SelectItem value="lab-doctor">Laboratory Doctor</SelectItem>
-                  <SelectItem value="lab-receptionist">Lab Receptionist</SelectItem>
+                  <SelectItem value="doctor">Doctor</SelectItem>
+                  <SelectItem value="receptionist">Receptionist</SelectItem>
                 </SelectContent>
               </Select>
               <FormDescription>
