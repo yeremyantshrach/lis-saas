@@ -149,7 +149,6 @@ const options = {
         const invitationUrl = `${env.betterAuth.baseURL}/invite/${id}`;
         const organizationName = invitation.organization?.name ?? "your organization";
         const inviterName = invitation.user?.name ?? undefined;
-
         try {
           await sendEmail({
             to: invitation.email,

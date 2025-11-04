@@ -1,6 +1,6 @@
 {
-  "id": "1b8bc05b-a39b-451b-a647-ed2840efba5b",
-  "prevId": "be9f64a4-8938-4d31-a206-e7dffff515d1",
+  "id": "c2eadea3-29a7-4799-aa70-93f1fe6b5345",
+  "prevId": "1b8bc05b-a39b-451b-a647-ed2840efba5b",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1042,8 +1042,8 @@
         "lab-admin",
         "lab-cls",
         "lab-technician",
-        "lab-doctor",
-        "lab-receptionist"
+        "doctor",
+        "receptionist"
       ]
     },
     "public.lab_test_panel": {

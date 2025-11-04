@@ -7,9 +7,14 @@ const loincPattern = /^\d{5}-\d$/;
 const cptPattern = /^\d{5}$/;
 const genePattern = /^[A-Za-z0-9]+$/;
 
+const enumWithMessage = <Values extends readonly [string, ...string[]]>(
+  values: Values,
+  message: string,
+) => z.enum(values, { message });
+
 const pathogenTargetSchema = z.object({
   name: z.string().trim().min(1, { message: "Pathogen name is required" }),
-  category: z.enum(PATHOGEN_CATEGORIES),
+  category: enumWithMessage(PATHOGEN_CATEGORIES, "Select a pathogen category"),
   clinicalSignificance: z
     .string()
     .trim()
@@ -24,10 +29,9 @@ const resistanceMarkerSchema = z.object({
     .regex(genePattern, { message: "Marker name must use letters or numbers only" }),
   gene: z.string().trim().regex(genePattern, { message: "Gene must use letters or numbers only" }),
   antibioticClass: z
-    .string()
+    .string({ error: "Select or enter an antibiotic class" })
     .trim()
-    .min(1, { message: "Select or enter an antibiotic class" })
-    .transform((value) => value || ""),
+    .min(1, { message: "Select or enter an antibiotic class" }),
   clinicalImplication: z
     .string()
     .trim()
@@ -45,8 +49,8 @@ export const createPcrTestSchema = z.object({
   testName: z.string().trim().min(1, { message: "Test name is required" }).max(100, {
     message: "Test name must be 100 characters or fewer",
   }),
-  panel: z.enum(PCR_TEST_PANELS),
-  sampleType: z.enum(PCR_SAMPLE_TYPES),
+  panel: enumWithMessage(PCR_TEST_PANELS, "Select a panel"),
+  sampleType: enumWithMessage(PCR_SAMPLE_TYPES, "Select a sample type"),
   price: z
     .string()
     .trim()
