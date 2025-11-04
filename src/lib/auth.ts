@@ -5,6 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, organization } from "better-auth/plugins";
 import { stripe as stripePlugin } from "@better-auth/stripe";
 import { adminAccessControl, admin as appAdmin, support } from "@/lib/auth/admin-permissions";
+import { isGlobalAdminRole, parseUserRoles } from "@/lib/auth/role-utils";
 import Stripe from "stripe";
 
 import { db, schema } from "./database";
@@ -223,6 +224,8 @@ export const auth = betterAuth({
   plugins: [
     ...options.plugins,
     customSession(async ({ session, user }) => {
+      const roles = parseUserRoles(user.role);
+      const isGlobalAdmin = isGlobalAdminRole(user.role);
       const [results, error] = await tryCatch(
         Promise.all([
           db.query.member.findFirst({
@@ -239,7 +242,11 @@ export const auth = betterAuth({
       const [userOrg, userTeam] = error ? [null, null] : results;
 
       return {
-        user,
+        user: {
+          ...user,
+          roles,
+          isGlobalAdmin,
+        },
         session: {
           ...session,
           activeOrganizationId: userOrg?.organization?.id || null,

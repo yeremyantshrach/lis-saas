@@ -7,6 +7,7 @@ import {
   IconChartBar,
   IconCreditCard,
   IconMicroscope,
+  IconBuilding,
   type Icon,
 } from "@tabler/icons-react";
 import type { Permission } from "./permissions";
@@ -75,6 +76,36 @@ export function getNavigationItems(orgSlug: string): NavItem[] {
           requiredPermission: "orgBilling:read",
         },
       ],
+    },
+  ];
+}
+
+export function getAdminNavigationItems(): NavItem[] {
+  return [
+    {
+      title: "Overview",
+      url: "/admin",
+      icon: IconDashboard,
+    },
+    {
+      title: "Organizations",
+      url: "/admin/organizations",
+      icon: IconBuilding,
+    },
+    {
+      title: "Users",
+      url: "/admin/users",
+      icon: IconUsers,
+    },
+    {
+      title: "Labs",
+      url: "/admin/labs",
+      icon: IconFlask,
+    },
+    {
+      title: "Lab Tests",
+      url: "/admin/lab-tests",
+      icon: IconMicroscope,
     },
   ];
 }

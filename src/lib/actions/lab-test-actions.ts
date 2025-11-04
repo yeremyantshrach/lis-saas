@@ -56,7 +56,9 @@ export async function createPcrTestAction(
   const { session } = await requirePermission("labTests:create");
 
   const organizationId = session.session?.activeOrganizationId ?? null;
-  if (!organizationId) {
+  const isGlobalAdmin = session.user.isGlobalAdmin ?? false;
+
+  if (!organizationId && !isGlobalAdmin) {
     return createErrorResult("Active organization is required to create tests");
   }
 
@@ -69,6 +71,7 @@ export async function createPcrTestAction(
     userId: session.user.id,
     organizationId,
     labId: selectedLabId,
+    isGlobalAdmin,
   };
 
   try {
@@ -128,7 +131,9 @@ export async function updatePcrTestAction(
   const { session } = await requirePermission("labTests:update");
 
   const organizationId = session.session?.activeOrganizationId ?? null;
-  if (!organizationId) {
+  const isGlobalAdmin = session.user.isGlobalAdmin ?? false;
+
+  if (!organizationId && !isGlobalAdmin) {
     return createErrorResult("Active organization is required to update tests");
   }
 
@@ -141,6 +146,7 @@ export async function updatePcrTestAction(
     userId: session.user.id,
     organizationId,
     labId: selectedLabId,
+    isGlobalAdmin,
   };
 
   try {
@@ -201,7 +207,9 @@ export async function deletePcrTestAction(
   const { session } = await requirePermission("labTests:delete");
 
   const organizationId = session.session?.activeOrganizationId ?? null;
-  if (!organizationId) {
+  const isGlobalAdmin = session.user.isGlobalAdmin ?? false;
+
+  if (!organizationId && !isGlobalAdmin) {
     return createErrorResult("Active organization is required to delete tests");
   }
 
@@ -214,6 +222,7 @@ export async function deletePcrTestAction(
     userId: session.user.id,
     organizationId,
     labId: selectedLabId,
+    isGlobalAdmin,
   };
 
   try {

@@ -52,6 +52,7 @@ export const labTests = pgTable(
     const currentUserId = sql`NULLIF(current_setting('lis.current_user_id', true), '')::uuid`;
     const activeLabId = sql`NULLIF(current_setting('lis.active_lab_id', true), '')::uuid`;
     const activeOrgId = sql`NULLIF(current_setting('lis.active_organization_id', true), '')::uuid`;
+    const isGlobalAdmin = sql`COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true'`;
 
     const labScopedAccess = sql`
       ${table.labId} = ${activeLabId}
@@ -79,7 +80,11 @@ export const labTests = pgTable(
       )
     `;
 
-    const accessibleRow = sql`(${labScopedAccess}) OR (${orgOwnerAccess})`;
+    const accessibleRow = sql`
+      (${isGlobalAdmin})
+      OR (${labScopedAccess})
+      OR (${orgOwnerAccess})
+    `;
 
     return [
       index("lab_tests_lab_idx").on(table.labId),
@@ -135,9 +140,11 @@ export const labTestPcrDetails = pgTable(
     const currentUserId = sql`NULLIF(current_setting('lis.current_user_id', true), '')::uuid`;
     const activeLabId = sql`NULLIF(current_setting('lis.active_lab_id', true), '')::uuid`;
     const activeOrgId = sql`NULLIF(current_setting('lis.active_organization_id', true), '')::uuid`;
+    const isGlobalAdmin = sql`COALESCE(current_setting('lis.is_global_admin', true), 'false') = 'true'`;
 
     const accessibleRow = sql`
-      EXISTS (
+      (${isGlobalAdmin})
+      OR EXISTS (
         SELECT 1
         FROM lab_tests AS parent
         WHERE parent.id = ${table.labTestId}

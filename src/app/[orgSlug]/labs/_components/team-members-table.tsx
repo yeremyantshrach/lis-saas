@@ -95,8 +95,8 @@ export function TeamMembersTable({ members, userId, labs = [], userRole }: TeamM
   const [isPending, startTransition] = useTransition();
 
   // Permission checks based on user role
-  const canEditRole = userRole === "org-owner" || userRole === "lab-admin";
-  const canChangeTeam = userRole === "org-owner";
+  const canEditRole = userRole === "admin" || userRole === "org-owner" || userRole === "lab-admin";
+  const canChangeTeam = userRole === "admin" || userRole === "org-owner";
 
   const normalizedMembers = useMemo(
     () =>

@@ -8,6 +8,10 @@ export async function getServerAuthSession() {
 }
 
 export function getPostAuthRedirect(session: Awaited<ReturnType<typeof auth.api.getSession>>) {
+  const isGlobalAdmin = session?.user?.isGlobalAdmin ?? false;
+  if (isGlobalAdmin || session?.user?.role === "admin") {
+    return "/admin";
+  }
   const orgSlug = session?.session?.activeOrganizationSlug;
   return orgSlug ? `/${orgSlug}/dashboard` : "/onboarding";
 }
@@ -36,6 +40,23 @@ export async function requireAuthenticated(fromPath: string) {
   if (!session?.user) {
     const search = fromPath ? `?from=${encodeURIComponent(fromPath)}` : "";
     redirect(`/sign-in${search}`);
+  }
+
+  return session;
+}
+
+export async function requireGlobalAdmin(fromPath = "/admin") {
+  const session = await getServerAuthSession();
+
+  if (!session?.user) {
+    const search = fromPath ? `?from=${encodeURIComponent(fromPath)}` : "";
+    redirect(`/sign-in${search}`);
+  }
+
+  const isAdmin = session.user.isGlobalAdmin || session.user.role === "admin";
+
+  if (!isAdmin) {
+    redirect(getPostAuthRedirect(session));
   }
 
   return session;

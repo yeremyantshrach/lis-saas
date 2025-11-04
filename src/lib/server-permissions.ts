@@ -10,7 +10,7 @@ export async function requirePermission(permission: Permission, redirectTo?: str
     redirect("/sign-in");
   }
 
-  if (session.user.role === "admin") {
+  if (session.user.isGlobalAdmin || session.user.role === "admin") {
     return { session, hasPermission: true };
   }
 
@@ -40,7 +40,7 @@ export async function checkPermission(permission: Permission): Promise<boolean> 
   const [session, sessionError] = await safeGetSession();
 
   if (sessionError || !session?.user) return false;
-  if (session.user.role === "admin") return true;
+  if (session.user.isGlobalAdmin || session.user.role === "admin") return true;
   if (!session.session?.activeOrganizationId) return false;
 
   const [userMember, memberError] = await safeGetUserMember(
