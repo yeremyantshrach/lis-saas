@@ -2,14 +2,14 @@ import "dotenv/config";
 import { exit } from "node:process";
 import { hashPassword } from "better-auth/crypto";
 
-import { db, connectionPool } from "@/lib/database";
+import { db, connectionPool } from "../src/lib/database";
 import {
   account,
   labTeamMember,
   member,
   session as sessionTable,
   user,
-} from "@/lib/auth/auth-schema";
+} from "../src/lib/auth/auth-schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 
