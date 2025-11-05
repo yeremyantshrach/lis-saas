@@ -18,10 +18,12 @@ FROM base AS runner
 ENV NODE_ENV=production
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --prod --frozen-lockfile
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/.env* ./
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/drizzle ./drizzle
+COPY --from=builder /app/src ./src
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh

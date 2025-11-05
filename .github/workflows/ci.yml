@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  quality-checks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || vars.BETTER_AUTH_SECRET || 'test-secret' }}
+      BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL || vars.BETTER_AUTH_URL || 'http://localhost:3000' }}
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lis
+      POSTGRES_PASSWORD: lis
+      POSTGRES_DB: lis
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY || vars.STRIPE_SECRET_KEY || 'sk_test_dummy' }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET || vars.STRIPE_WEBHOOK_SECRET || 'whsec_dummy' }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY || vars.RESEND_API_KEY || 're_test_dummy' }}
+      RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL || vars.RESEND_FROM_EMAIL || 'noreply@example.com' }}
+      DEFAULT_ADMIN_EMAIL: ${{ secrets.DEFAULT_ADMIN_EMAIL || vars.DEFAULT_ADMIN_EMAIL || 'admin@example.com' }}
+      DEFAULT_ADMIN_PASSWORD: ${{ secrets.DEFAULT_ADMIN_PASSWORD || vars.DEFAULT_ADMIN_PASSWORD || 'admin12345' }}
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache Next.js build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            ${{ github.workspace }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+  production-parity:
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: lis
+          POSTGRES_USER: lis
+          POSTGRES_PASSWORD: lis
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U lis -d lis"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || vars.BETTER_AUTH_SECRET || 'test-secret' }}
+      BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL || vars.BETTER_AUTH_URL || 'http://localhost:3000' }}
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lis
+      POSTGRES_PASSWORD: lis
+      POSTGRES_DB: lis
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY || vars.STRIPE_SECRET_KEY || 'sk_test_dummy' }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET || vars.STRIPE_WEBHOOK_SECRET || 'whsec_dummy' }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY || vars.RESEND_API_KEY || 're_test_dummy' }}
+      RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL || vars.RESEND_FROM_EMAIL || 'noreply@example.com' }}
+      DEFAULT_ADMIN_EMAIL: ${{ secrets.DEFAULT_ADMIN_EMAIL || vars.DEFAULT_ADMIN_EMAIL || 'admin@example.com' }}
+      DEFAULT_ADMIN_PASSWORD: ${{ secrets.DEFAULT_ADMIN_PASSWORD || vars.DEFAULT_ADMIN_PASSWORD || 'admin12345' }}
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install production dependencies
+        run: pnpm install --prod --frozen-lockfile
+
+      - name: Run database migrations (production parity)
+        run: node ./scripts/run-migrations.mjs
+
+      - name: Promote default admin (production parity)
+        run: pnpm promote-admin -- --email "$DEFAULT_ADMIN_EMAIL" --password "$DEFAULT_ADMIN_PASSWORD" --name "CI Admin"
