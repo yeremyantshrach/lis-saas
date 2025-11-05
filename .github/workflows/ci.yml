@@ -11,6 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || vars.BETTER_AUTH_SECRET || 'test-secret' }}
+      BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL || vars.BETTER_AUTH_URL || 'http://localhost:3000' }}
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lis
+      POSTGRES_PASSWORD: lis
+      POSTGRES_DB: lis
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY || vars.STRIPE_SECRET_KEY || 'sk_test_dummy' }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET || vars.STRIPE_WEBHOOK_SECRET || 'whsec_dummy' }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY || vars.RESEND_API_KEY || 're_test_dummy' }}
+      RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL || vars.RESEND_FROM_EMAIL || 'noreply@example.com' }}
+      DEFAULT_ADMIN_EMAIL: ${{ secrets.DEFAULT_ADMIN_EMAIL || vars.DEFAULT_ADMIN_EMAIL || 'admin@example.com' }}
+      DEFAULT_ADMIN_PASSWORD: ${{ secrets.DEFAULT_ADMIN_PASSWORD || vars.DEFAULT_ADMIN_PASSWORD || 'admin12345' }}
+      NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -59,19 +74,19 @@ jobs:
           --health-timeout=5s
           --health-retries=5
     env:
-      BETTER_AUTH_SECRET: test-secret
-      BETTER_AUTH_URL: http://localhost:3000
+      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || vars.BETTER_AUTH_SECRET || 'test-secret' }}
+      BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL || vars.BETTER_AUTH_URL || 'http://localhost:3000' }}
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       POSTGRES_USER: lis
       POSTGRES_PASSWORD: lis
       POSTGRES_DB: lis
-      STRIPE_SECRET_KEY: sk_test_dummy
-      STRIPE_WEBHOOK_SECRET: whsec_dummy
-      RESEND_API_KEY: re_test_dummy
-      RESEND_FROM_EMAIL: noreply@example.com
-      DEFAULT_ADMIN_EMAIL: admin@example.com
-      DEFAULT_ADMIN_PASSWORD: admin12345
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY || vars.STRIPE_SECRET_KEY || 'sk_test_dummy' }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET || vars.STRIPE_WEBHOOK_SECRET || 'whsec_dummy' }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY || vars.RESEND_API_KEY || 're_test_dummy' }}
+      RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL || vars.RESEND_FROM_EMAIL || 'noreply@example.com' }}
+      DEFAULT_ADMIN_EMAIL: ${{ secrets.DEFAULT_ADMIN_EMAIL || vars.DEFAULT_ADMIN_EMAIL || 'admin@example.com' }}
+      DEFAULT_ADMIN_PASSWORD: ${{ secrets.DEFAULT_ADMIN_PASSWORD || vars.DEFAULT_ADMIN_PASSWORD || 'admin12345' }}
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
