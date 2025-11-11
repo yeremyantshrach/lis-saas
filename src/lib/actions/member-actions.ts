@@ -13,6 +13,7 @@ import { headers } from "next/headers";
 import { removeMemberSchema, updateMemberSchema } from "@/lib/validations/members";
 import { db } from "@/lib/database";
 import { labTeamMember } from "@/lib/schema";
+import { tryCatch } from "@/lib/try-catch";
 
 export async function updateMemberAction(
   data: z.infer<typeof updateMemberSchema>,
@@ -28,17 +29,21 @@ export async function updateMemberAction(
     const requestHeaders = await headers();
 
     // Update member role via Better Auth API
-    const response = await auth.api.updateMemberRole({
-      body: {
-        memberId: data.memberId,
-        role: data.role,
-        organizationId: session.session.activeOrganizationId,
-      },
-      headers: requestHeaders,
-    });
+    const [updateRoleResponse, updateRoleError] = await tryCatch(
+      auth.api.updateMemberRole({
+        body: {
+          memberId: data.memberId,
+          role: data.role,
+          organizationId: session.session.activeOrganizationId,
+        },
+        headers: requestHeaders,
+      }),
+    );
 
-    if (!response) {
-      return createErrorResult("Failed to update member role");
+    if (updateRoleError || !updateRoleResponse) {
+      const message =
+        updateRoleError instanceof Error ? updateRoleError.message : "Failed to update member role";
+      return createErrorResult(message);
     }
 
     const memberRecord = await db.query.member.findFirst({
@@ -73,23 +78,53 @@ export async function updateMemberAction(
       }
 
       if (existingMembership?.labId && existingMembership.labId !== requestedTeamId) {
-        await auth.api.removeTeamMember({
-          body: { teamId: existingMembership.labId, userId: memberRecord.userId },
-          headers: requestHeaders,
-        });
+        const [, removeExistingError] = await tryCatch(
+          auth.api.removeTeamMember({
+            body: { teamId: existingMembership.labId, userId: memberRecord.userId },
+            headers: requestHeaders,
+          }),
+        );
+
+        if (removeExistingError) {
+          const message =
+            removeExistingError instanceof Error
+              ? removeExistingError.message
+              : "Failed to detach member from previous lab";
+          return createErrorResult(message);
+        }
       }
 
       if (!existingMembership || existingMembership.labId !== requestedTeamId) {
-        await auth.api.addTeamMember({
-          body: { teamId: requestedTeamId, userId: memberRecord.userId },
-          headers: requestHeaders,
-        });
+        const [, addMemberError] = await tryCatch(
+          auth.api.addTeamMember({
+            body: { teamId: requestedTeamId, userId: memberRecord.userId },
+            headers: requestHeaders,
+          }),
+        );
+
+        if (addMemberError) {
+          const message =
+            addMemberError instanceof Error
+              ? addMemberError.message
+              : "Failed to assign member to selected lab";
+          return createErrorResult(message);
+        }
       }
     } else if (existingMembership?.labId) {
-      await auth.api.removeTeamMember({
-        body: { teamId: existingMembership.labId, userId: memberRecord.userId },
-        headers: requestHeaders,
-      });
+      const [, removeMemberError] = await tryCatch(
+        auth.api.removeTeamMember({
+          body: { teamId: existingMembership.labId, userId: memberRecord.userId },
+          headers: requestHeaders,
+        }),
+      );
+
+      if (removeMemberError) {
+        const message =
+          removeMemberError instanceof Error
+            ? removeMemberError.message
+            : "Failed to detach member from lab";
+        return createErrorResult(message);
+      }
     }
 
     revalidateOrgPaths();
@@ -112,16 +147,20 @@ export async function removeMemberAction(
     }
 
     // Remove member via Better Auth API
-    const response = await auth.api.removeMember({
-      body: {
-        memberIdOrEmail: data.memberId,
-        organizationId: session.session.activeOrganizationId,
-      },
-      headers: await headers(),
-    });
+    const [removeResponse, removeError] = await tryCatch(
+      auth.api.removeMember({
+        body: {
+          memberIdOrEmail: data.memberId,
+          organizationId: session.session.activeOrganizationId,
+        },
+        headers: await headers(),
+      }),
+    );
 
-    if (!response) {
-      return createErrorResult("Failed to remove member");
+    if (removeError || !removeResponse) {
+      const message =
+        removeError instanceof Error ? removeError.message : "Failed to remove member";
+      return createErrorResult(message);
     }
 
     revalidateOrgPaths();

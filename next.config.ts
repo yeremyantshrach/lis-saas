@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
     "@react-email/tailwind",
     "@react-email/render",
   ],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "15mb",
+    },
+  },
 };
 
 export default nextConfig;

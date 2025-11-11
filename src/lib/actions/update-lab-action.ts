@@ -6,12 +6,13 @@ import { auth } from "@/lib/auth";
 import { requirePermission } from "@/lib/server-permissions";
 import { headers } from "next/headers";
 import { createLabSchema } from "@/lib/validations/labs";
+import { tryCatch } from "@/lib/try-catch";
 
 export async function updateLabAction(teamId: string, data: z.infer<typeof createLabSchema>) {
   await requirePermission("team:update");
 
-  try {
-    const result = await auth.api.updateTeam({
+  const [result, error] = await tryCatch(
+    auth.api.updateTeam({
       body: {
         teamId,
         data: {
@@ -19,11 +20,14 @@ export async function updateLabAction(teamId: string, data: z.infer<typeof creat
         },
       },
       headers: await headers(),
-    });
+    }),
+  );
 
-    revalidatePath("/[orgSlug]/labs", "page");
-    return { success: true, data: result };
-  } catch (error) {
-    return { success: false, error: (error as Error)?.message || "Failed to update lab" };
+  if (error || !result) {
+    const message = error instanceof Error ? error.message : "Failed to update lab";
+    return { success: false, error: message };
   }
+
+  revalidatePath("/[orgSlug]/labs", "page");
+  return { success: true, data: result };
 }
