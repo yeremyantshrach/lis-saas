@@ -8,26 +8,33 @@ import {
   safeGetLabTeamMemberships,
   safeGetUserMember,
 } from "@/lib/helpers/db-helpers";
-import { listPatientsForLab } from "@/lib/helpers/patient-helpers";
-import { PatientsDashboard } from "./_components/patients-dashboard";
+import { getPatientProfile } from "@/lib/helpers/patient-helpers";
+import { PatientWizard } from "../../_components/patient-wizard";
 
-interface PatientsPageProps {
-  params: Promise<{ orgSlug: string }>;
-  searchParams?: Promise<{ labId?: string }>;
+interface EditPatientPageProps {
+  params: Promise<{ orgSlug: string; patientId: string }>;
 }
 
-export default async function PatientsPage({ params, searchParams }: PatientsPageProps) {
-  const { orgSlug } = await params;
-  const resolvedSearchParams = (searchParams ? await searchParams : {}) as {
-    labId?: string | string[];
-  };
-  const selectedLabFromQuery =
-    typeof resolvedSearchParams.labId === "string" ? resolvedSearchParams.labId : undefined;
-
-  const { session } = await requirePermission("labPatients:read");
+export default async function EditPatientPage({ params }: EditPatientPageProps) {
+  const { orgSlug, patientId } = await params;
+  const { session } = await requirePermission("labPatients:update");
   const organizationId = session.session?.activeOrganizationId ?? null;
-  const isGlobalAdmin = session.user.isGlobalAdmin ?? false;
   const activeLabId = session.session?.activeLabId ?? null;
+  const isGlobalAdmin = session.user.isGlobalAdmin ?? false;
+
+  const patient = await getPatientProfile(
+    {
+      userId: session.user.id,
+      organizationId,
+      labId: activeLabId,
+      isGlobalAdmin,
+    },
+    patientId,
+  );
+
+  if (!patient) {
+    notFound();
+  }
 
   const requestHeaders = await headers();
   const [labsResponse] = await tryCatch(
@@ -45,7 +52,7 @@ export default async function PatientsPage({ params, searchParams }: PatientsPag
     : [null];
   const isOrgOwner = userMember?.role === "org-owner";
 
-  if (!isOrgOwner) {
+  if (!isOrgOwner && !isGlobalAdmin) {
     const labIds = labs.map((lab) => lab.id);
     const [memberships] =
       labIds.length > 0 && organizationId
@@ -54,7 +61,6 @@ export default async function PatientsPage({ params, searchParams }: PatientsPag
 
     const accessibleLabIds = new Set<string>();
     if (activeLabId) accessibleLabIds.add(activeLabId);
-
     for (const membership of memberships ?? []) {
       if (membership.userId === session.user.id) {
         accessibleLabIds.add(membership.labId);
@@ -71,48 +77,17 @@ export default async function PatientsPage({ params, searchParams }: PatientsPag
     }
   }
 
-  const resolvedLabId =
-    selectedLabFromQuery && labs.some((lab) => lab.id === selectedLabFromQuery)
-      ? selectedLabFromQuery
-      : activeLabId && labs.some((lab) => lab.id === activeLabId)
-        ? activeLabId
-        : (labs[0]?.id ?? null);
-
-  const patients =
-    resolvedLabId && (organizationId || isGlobalAdmin)
-      ? await listPatientsForLab(
-          {
-            userId: session.user.id,
-            organizationId,
-            labId: resolvedLabId,
-            isGlobalAdmin,
-          },
-          { labId: resolvedLabId },
-        )
-      : [];
-
-  const [canCreate, canUpdate] = await Promise.all([
-    checkPermission("labPatients:create"),
-    checkPermission("labPatients:update"),
-  ]);
-
-  if (!labs.length && !patients.length) {
-    // No labs the user can access and no fallback lab to select.
-    // Redirect to labs page if they also lack permissions.
-    if (!canCreate) {
-      notFound();
-    }
-  }
+  const [canDeleteDocuments] = await Promise.all([checkPermission("labPatients:delete")]);
 
   return (
     <div className="flex flex-col gap-4 px-4 py-4 md:gap-6 md:py-6 lg:px-6">
-      <PatientsDashboard
-        patients={patients}
+      <PatientWizard
         labs={labs}
-        selectedLabId={resolvedLabId}
-        canCreate={canCreate}
-        canUpdate={canUpdate}
+        defaultLabId={activeLabId ?? labs[0]?.id}
         orgSlug={orgSlug}
+        existingPatient={patient}
+        mode="edit"
+        canDeleteDocuments={canDeleteDocuments}
       />
     </div>
   );
