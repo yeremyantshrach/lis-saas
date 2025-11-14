@@ -1,7 +1,7 @@
 CREATE TYPE "public"."patient_document_status" AS ENUM('pending', 'uploaded', 'failed', 'archived');--> statement-breakpoint
 CREATE TYPE "public"."patient_document_type" AS ENUM('government_id', 'insurance_card', 'other');--> statement-breakpoint
 CREATE TYPE "public"."patient_gender" AS ENUM('male', 'female', 'other');--> statement-breakpoint
-CREATE TYPE "public"."patient_payment_method" AS ENUM('insurance', 'self_pay', 'medicare', 'medicaid', 'other');--> statement-breakpoint
+CREATE TYPE "public"."patient_payment_method" AS ENUM('insurance', 'self_pay', 'payment_plan', 'credit_card', 'cash', 'check', 'other'); --> statement-breakpoint
 CREATE TYPE "public"."patient_profile_status" AS ENUM('active', 'inactive', 'archived');--> statement-breakpoint
 CREATE TABLE "lab_patient_profiles" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
