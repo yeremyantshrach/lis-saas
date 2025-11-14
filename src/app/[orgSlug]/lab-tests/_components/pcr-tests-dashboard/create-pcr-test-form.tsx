@@ -12,6 +12,10 @@ import {
   PCR_TEST_PANELS,
 } from "@/lib/lab-tests/constants";
 import {
+  PATHOGEN_CLINICAL_SIGNIFICANCE_MAX_LENGTH,
+  PATHOGEN_NAME_MAX_LENGTH,
+} from "@/lib/constants/limits";
+import {
   Form,
   FormControl,
   FormDescription,
@@ -453,6 +457,7 @@ export function CreatePcrTestForm({
                         disabled={disabled}
                         required
                         aria-required="true"
+                        maxLength={100}
                         {...field}
                       />
                     </FormControl>
@@ -474,6 +479,7 @@ export function CreatePcrTestForm({
                       <Input
                         placeholder="Auto-generates when left blank"
                         disabled={disabled}
+                        maxLength={10}
                         value={field.value ?? ""}
                         onChange={(event) =>
                           field.onChange(event.target.value ? event.target.value : undefined)
@@ -669,6 +675,7 @@ export function CreatePcrTestForm({
                                         disabled={disabled}
                                         required
                                         aria-required="true"
+                                        maxLength={PATHOGEN_NAME_MAX_LENGTH}
                                         {...field}
                                       />
                                     </FormControl>
@@ -720,6 +727,7 @@ export function CreatePcrTestForm({
                                         placeholder="Optional. e.g. Common culprit in onychomycosis for immunocompromised patients."
                                         disabled={disabled}
                                         value={field.value ?? ""}
+                                        maxLength={PATHOGEN_CLINICAL_SIGNIFICANCE_MAX_LENGTH}
                                         onChange={(event) =>
                                           field.onChange(
                                             event.target.value ? event.target.value : undefined,
@@ -897,6 +905,7 @@ export function CreatePcrTestForm({
                                           placeholder="Optional. e.g. Confers decreased susceptibility to beta-lactams."
                                           disabled={disabled}
                                           value={field.value ?? ""}
+                                          maxLength={PATHOGEN_CLINICAL_SIGNIFICANCE_MAX_LENGTH}
                                           onChange={(event) =>
                                             field.onChange(
                                               event.target.value ? event.target.value : undefined,
@@ -940,6 +949,7 @@ export function CreatePcrTestForm({
                         placeholder="Optional. Describe what this test covers or when to order it."
                         className="min-h-24"
                         disabled={disabled}
+                        maxLength={500}
                         value={field.value ?? ""}
                         onChange={(event) =>
                           field.onChange(event.target.value ? event.target.value : undefined)
@@ -1005,6 +1015,7 @@ export function CreatePcrTestForm({
                         <Input
                           placeholder="e.g. 92130-7"
                           disabled={disabled}
+                          maxLength={10}
                           value={field.value ?? ""}
                           onChange={(event) =>
                             field.onChange(event.target.value ? event.target.value : undefined)
@@ -1052,6 +1063,7 @@ export function CreatePcrTestForm({
                         <Input
                           placeholder="e.g. 87507"
                           disabled={disabled}
+                          maxLength={5}
                           value={field.value ?? ""}
                           onChange={(event) =>
                             field.onChange(event.target.value ? event.target.value : undefined)
