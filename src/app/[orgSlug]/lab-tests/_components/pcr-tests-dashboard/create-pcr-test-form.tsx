@@ -220,8 +220,12 @@ export function CreatePcrTestForm({
       };
     }
 
+    const resolvedCreateLabId = shouldShowLabSelect
+      ? undefined
+      : (defaultLabId ?? labOptions[0]?.id ?? undefined);
+
     return {
-      labId: defaultLabId ?? (labOptions.length === 1 ? labOptions[0]?.id : undefined),
+      labId: resolvedCreateLabId,
       testName: "",
       testCode: undefined,
       panel: undefined,
@@ -235,7 +239,15 @@ export function CreatePcrTestForm({
       defaultClinicalNotes: undefined,
       orgSlug,
     };
-  }, [mode, initialData, defaultLabId, labOptions, orgSlug, createEmptyPathogen]);
+  }, [
+    mode,
+    initialData,
+    defaultLabId,
+    labOptions,
+    orgSlug,
+    createEmptyPathogen,
+    shouldShowLabSelect,
+  ]);
 
   const form = useForm<CreatePcrTestFormValues>({
     resolver: zodResolver(createPcrTestSchema),
@@ -340,10 +352,8 @@ export function CreatePcrTestForm({
           router.refresh();
           form.reset({
             labId: shouldShowLabSelect
-              ? values.labId
-              : labOptions.length === 1
-                ? labOptions[0]?.id
-                : undefined,
+              ? undefined
+              : (values.labId ?? defaultLabId ?? labOptions[0]?.id ?? undefined),
             testName: "",
             testCode: undefined,
             panel: undefined,
@@ -410,7 +420,7 @@ export function CreatePcrTestForm({
                   render={({ field }) => (
                     <FormItem className="md:col-span-1">
                       <FormLabel>
-                        Owning lab
+                        Laboratory
                         {requiredIndicator}
                       </FormLabel>
                       <Select
@@ -420,7 +430,7 @@ export function CreatePcrTestForm({
                       >
                         <FormControl>
                           <SelectTrigger className="w-full" aria-required="true">
-                            <SelectValue placeholder="Select lab" />
+                            <SelectValue placeholder="Select laboratory" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -583,7 +593,7 @@ export function CreatePcrTestForm({
                     >
                       <FormControl>
                         <SelectTrigger className="w-full" aria-required="true">
-                          <SelectValue placeholder="Select sample" />
+                          <SelectValue placeholder="Select sample type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
