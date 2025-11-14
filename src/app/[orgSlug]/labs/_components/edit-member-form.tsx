@@ -109,7 +109,6 @@ export function EditMemberForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="org-owner">Organization Owner</SelectItem>
                   <SelectItem value="lab-admin">Lab Admin</SelectItem>
                   <SelectItem value="lab-cls">Clinical Laboratory Scientist</SelectItem>
                   <SelectItem value="lab-technician">Laboratory Technician</SelectItem>
