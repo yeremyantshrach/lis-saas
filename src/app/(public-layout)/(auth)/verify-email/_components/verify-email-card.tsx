@@ -19,6 +19,7 @@ interface VerifyEmailCardProps extends ComponentProps<"div"> {
 
 export function VerifyEmailCard({ email, className, ...props }: VerifyEmailCardProps) {
   const [isPending, startTransition] = useTransition();
+  const emailIsLocked = Boolean(email);
   const {
     register,
     handleSubmit,
@@ -69,22 +70,23 @@ export function VerifyEmailCard({ email, className, ...props }: VerifyEmailCardP
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  {...register("email")}
-                  disabled={isPending}
-                  aria-invalid={!!errors.email}
-                />
-                <FieldDescription className={cn(errors.email && "text-destructive")}>
-                  {errors.email?.message ||
-                    (email
-                      ? "Need to use a different email? Update it below and resend the link."
-                      : "Use the email address associated with your account.")}
-                </FieldDescription>
-              </Field>
+              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                {...register("email")}
+                disabled={isPending}
+                readOnly={emailIsLocked}
+                aria-invalid={!!errors.email}
+              />
+              <FieldDescription className={cn(errors.email && "text-destructive")}>
+                {errors.email?.message ||
+                  (emailIsLocked
+                    ? "We'll verify the same email you used during sign up."
+                    : "Use the email address associated with your account.")}
+              </FieldDescription>
+            </Field>
               <Field>
                 <Button type="submit" className="w-full" disabled={isPending}>
                   {isPending ? "Sending email..." : "Resend verification email"}
