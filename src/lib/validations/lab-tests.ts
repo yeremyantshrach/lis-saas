@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { PATHOGEN_CATEGORIES, PCR_SAMPLE_TYPES, PCR_TEST_PANELS } from "@/lib/lab-tests/constants";
+import {
+  PATHOGEN_CLINICAL_SIGNIFICANCE_MAX_LENGTH,
+  PATHOGEN_NAME_MAX_LENGTH,
+} from "@/lib/constants/limits";
 
 const pricePattern = /^\d+(\.\d{1,2})?$/;
 const testCodePattern = /^PCR-\d{3}-\d{2}$/;
@@ -13,12 +17,20 @@ const enumWithMessage = <Values extends readonly [string, ...string[]]>(
 ) => z.enum(values, { message });
 
 const pathogenTargetSchema = z.object({
-  name: z.string().trim().min(1, { message: "Pathogen name is required" }),
+  name: z
+    .string()
+    .trim()
+    .min(1, { message: "Pathogen name is required" })
+    .max(PATHOGEN_NAME_MAX_LENGTH, {
+      message: `Pathogen name must be ${PATHOGEN_NAME_MAX_LENGTH} characters or fewer`,
+    }),
   category: enumWithMessage(PATHOGEN_CATEGORIES, "Select a pathogen category"),
   clinicalSignificance: z
     .string()
     .trim()
-    .max(500, { message: "Clinical significance must be 500 characters or fewer" })
+    .max(PATHOGEN_CLINICAL_SIGNIFICANCE_MAX_LENGTH, {
+      message: `Clinical significance must be ${PATHOGEN_CLINICAL_SIGNIFICANCE_MAX_LENGTH} characters or fewer`,
+    })
     .optional(),
 });
 
@@ -35,7 +47,9 @@ const resistanceMarkerSchema = z.object({
   clinicalImplication: z
     .string()
     .trim()
-    .max(500, { message: "Clinical implication must be 500 characters or fewer" })
+    .max(PATHOGEN_CLINICAL_SIGNIFICANCE_MAX_LENGTH, {
+      message: `Clinical implication must be ${PATHOGEN_CLINICAL_SIGNIFICANCE_MAX_LENGTH} characters or fewer`,
+    })
     .optional(),
 });
 

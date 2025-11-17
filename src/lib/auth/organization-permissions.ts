@@ -11,8 +11,8 @@ import { createAccessControl } from "better-auth/plugins/access";
  * - lab-admin (team) - manage lab teams and settings
  * - lab-cls (clinical laboratory scientist) - manage orders and results
  * - lab-technician (laboratory technician) - assist with order processing
- * - doctor - review and authorize results
- * - receptionist - handle client interactions and sample intake
+ * - client-doctor - review and authorize results
+ * - client-assistant - handle client interactions and sample intake
  */
 
 const statement = {
@@ -62,13 +62,13 @@ export const labTech = organizationAccessControl.newRole({
   labPatients: ["read", "create", "update"],
 });
 
-export const doctor = organizationAccessControl.newRole({
+export const clientDoctor = organizationAccessControl.newRole({
   labResults: ["read", "update"],
   labTests: ["read", "update"],
   labPatients: ["read"],
 });
 
-export const receptionist = organizationAccessControl.newRole({
+export const clientAssistant = organizationAccessControl.newRole({
   labOrders: ["read", "create"],
   labTests: ["read"],
   labPatients: ["read", "create"],
@@ -79,6 +79,6 @@ export const organizationRoles = {
   "lab-admin": labAdmin,
   "lab-cls": labCls,
   "lab-technician": labTech,
-  doctor,
-  receptionist,
+  "client-doctor": clientDoctor,
+  "client-assistant": clientAssistant,
 };

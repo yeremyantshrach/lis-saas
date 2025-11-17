@@ -1,16 +1,11 @@
-import type { UseFormReturn } from "react-hook-form";
+import { Controller, type UseFormReturn } from "react-hook-form";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { DEFAULT_TEXT_INPUT_MAX_LENGTH } from "@/lib/constants/limits";
 import type { CreatePatientFormValues } from "@/lib/validations/patients";
+import { WizardField } from "./wizard-field";
 
 interface PatientContactCardProps {
   form: UseFormReturn<CreatePatientFormValues>;
@@ -26,83 +21,130 @@ export function PatientContactCard({ form }: PatientContactCardProps) {
           go to the right place the first time.
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 md:grid-cols-2">
-        <FormField
-          control={form.control}
-          name="contact.streetAddress"
-          render={({ field }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Street Address</FormLabel>
-              <FormDescription>
-                Use the location where kits and statements should arrive.
-              </FormDescription>
-              <FormControl>
-                <Input placeholder="123 Main St, Suite 200" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <CardContent>
+        <FieldGroup className="grid gap-4 md:grid-cols-2">
+          <Controller
+            control={form.control}
+            name="contact.streetAddress"
+            render={({ field, fieldState }) => (
+              <WizardField
+                className="md:col-span-2"
+                label="Street Address"
+                description="Use the location where kits and statements should arrive."
+                error={fieldState.error}
+              >
+                {({ inputId, describedBy, isInvalid }) => (
+                  <Input
+                    id={inputId}
+                    placeholder="123 Main St, Suite 200"
+                    {...field}
+                    value={field.value ?? ""}
+                    maxLength={DEFAULT_TEXT_INPUT_MAX_LENGTH}
+                    aria-describedby={describedBy}
+                    aria-invalid={isInvalid}
+                  />
+                )}
+              </WizardField>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="contact.addressLine2"
-          render={({ field }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Address Line 2 (optional)</FormLabel>
-              <FormDescription>Suite, floor, building, or PO box details.</FormDescription>
-              <FormControl>
-                <Input placeholder="Floor, unit, or PO box" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <Controller
+            control={form.control}
+            name="contact.addressLine2"
+            render={({ field, fieldState }) => (
+              <WizardField
+                className="md:col-span-2"
+                label="Address Line 2 (optional)"
+                description="Suite, floor, building, or PO box details."
+                error={fieldState.error}
+              >
+                {({ inputId, describedBy, isInvalid }) => (
+                  <Input
+                    id={inputId}
+                    placeholder="Floor, unit, or PO box"
+                    {...field}
+                    value={field.value ?? ""}
+                    maxLength={DEFAULT_TEXT_INPUT_MAX_LENGTH}
+                    aria-describedby={describedBy}
+                    aria-invalid={isInvalid}
+                  />
+                )}
+              </WizardField>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="contact.city"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>City</FormLabel>
-              <FormDescription>We use this to pre-fill requisition paperwork.</FormDescription>
-              <FormControl>
-                <Input placeholder="Atlanta" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <Controller
+            control={form.control}
+            name="contact.city"
+            render={({ field, fieldState }) => (
+              <WizardField
+                label="City"
+                description="We use this to pre-fill requisition paperwork."
+                error={fieldState.error}
+              >
+                {({ inputId, describedBy, isInvalid }) => (
+                  <Input
+                    id={inputId}
+                    placeholder="Atlanta"
+                    {...field}
+                    value={field.value ?? ""}
+                    maxLength={DEFAULT_TEXT_INPUT_MAX_LENGTH}
+                    aria-describedby={describedBy}
+                    aria-invalid={isInvalid}
+                  />
+                )}
+              </WizardField>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="contact.state"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>State / Region</FormLabel>
-              <FormDescription>Needed for courier routing and compliance.</FormDescription>
-              <FormControl>
-                <Input placeholder="GA" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <Controller
+            control={form.control}
+            name="contact.state"
+            render={({ field, fieldState }) => (
+              <WizardField
+                label="State / Region"
+                description="Needed for courier routing and compliance."
+                error={fieldState.error}
+              >
+                {({ inputId, describedBy, isInvalid }) => (
+                  <Input
+                    id={inputId}
+                    placeholder="GA"
+                    {...field}
+                    value={field.value ?? ""}
+                    maxLength={DEFAULT_TEXT_INPUT_MAX_LENGTH}
+                    aria-describedby={describedBy}
+                    aria-invalid={isInvalid}
+                  />
+                )}
+              </WizardField>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="contact.postalCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Postal / ZIP Code</FormLabel>
-              <FormDescription>Verifies whether courier pickups are available.</FormDescription>
-              <FormControl>
-                <Input placeholder="30301" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <Controller
+            control={form.control}
+            name="contact.postalCode"
+            render={({ field, fieldState }) => (
+              <WizardField
+                label="Postal / ZIP Code"
+                description="Verifies whether courier pickups are available."
+                error={fieldState.error}
+              >
+                {({ inputId, describedBy, isInvalid }) => (
+                  <Input
+                    id={inputId}
+                    placeholder="30301"
+                    {...field}
+                    value={field.value ?? ""}
+                    maxLength={DEFAULT_TEXT_INPUT_MAX_LENGTH}
+                    aria-describedby={describedBy}
+                    aria-invalid={isInvalid}
+                  />
+                )}
+              </WizardField>
+            )}
+          />
+        </FieldGroup>
       </CardContent>
     </Card>
   );

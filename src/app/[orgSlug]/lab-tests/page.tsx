@@ -1,74 +1,111 @@
-import { headers } from "next/headers";
 import { requirePermission, checkPermission } from "@/lib/server-permissions";
 import { listAccessiblePcrTests } from "@/lib/helpers/lab-tests-helpers";
 import { PcrTestsDashboard } from "./_components/pcr-tests-dashboard";
-import { auth } from "@/lib/auth";
-import { tryCatch } from "@/lib/try-catch";
 import {
   safeGetLabById,
   safeGetLabTeamMemberships,
+  safeGetLabsForOrganization,
+  safeGetOrganizationBySlug,
   safeGetUserMember,
 } from "@/lib/helpers/db-helpers";
+import { redirect, notFound } from "next/navigation";
+import { getPostAuthRedirect } from "@/lib/auth/auth-redirects";
 
 export default async function LabTestsPage({ params }: PageProps<"/[orgSlug]/lab-tests">) {
   const { orgSlug } = await params;
   const { session } = await requirePermission("labTests:read");
 
-  const organizationId = session.session?.activeOrganizationId ?? null;
+  const [orgRecord] = await safeGetOrganizationBySlug(orgSlug);
+  if (!orgRecord) {
+    notFound();
+  }
+
+  const requestedOrgId = orgRecord.id;
+  const activeOrgSlug = session.session?.activeOrganizationSlug;
+
+  if (!activeOrgSlug) {
+    redirect("/onboarding");
+  }
+
+  if (activeOrgSlug !== orgSlug) {
+    redirect(getPostAuthRedirect(session));
+  }
+
   const isGlobalAdmin = session.user.isGlobalAdmin ?? false;
-  const activeLabId = session.session?.activeLabId ?? null;
+  const activeLabIdFromSession = session.session?.activeLabId ?? null;
+
+  const [userMember] = requestedOrgId
+    ? await safeGetUserMember(session.user.id, requestedOrgId)
+    : [null];
+
+  if (!userMember && !isGlobalAdmin) {
+    redirect("/unauthorized");
+  }
+
+  const organizationId = requestedOrgId;
+
+  const [labsResult] = organizationId ? await safeGetLabsForOrganization(organizationId) : [[]];
+  let labs: { id: string; name: string }[] = Array.isArray(labsResult)
+    ? labsResult.map((lab) => ({ id: lab.id, name: lab.name }))
+    : [];
+
+  const isOrgOwner = userMember?.role === "org-owner";
+  const treatsAllLabs = isOrgOwner || isGlobalAdmin;
+
+  const labIds = labs.map((lab) => lab.id);
+  const [memberships] =
+    !treatsAllLabs && labIds.length > 0 && organizationId
+      ? await safeGetLabTeamMemberships(organizationId, labIds)
+      : [[]];
+
+  const accessibleLabIds = new Set<string>();
+
+  if (treatsAllLabs) {
+    for (const id of labIds) {
+      accessibleLabIds.add(id);
+    }
+  } else {
+    for (const membership of memberships ?? []) {
+      if (membership.userId === session.user.id) {
+        accessibleLabIds.add(membership.labId);
+      }
+    }
+  }
+
+  if (activeLabIdFromSession && labIds.includes(activeLabIdFromSession)) {
+    accessibleLabIds.add(activeLabIdFromSession);
+  }
+
+  const getFirstAccessibleLabId = () => {
+    for (const id of accessibleLabIds) {
+      return id;
+    }
+    return null;
+  };
+
+  const labIdForContext = accessibleLabIds.size
+    ? accessibleLabIds.has(activeLabIdFromSession ?? "")
+      ? activeLabIdFromSession
+      : getFirstAccessibleLabId()
+    : null;
 
   let tests =
     organizationId || isGlobalAdmin
       ? await listAccessiblePcrTests({
           userId: session.user.id,
           organizationId,
-          labId: activeLabId,
+          labId: labIdForContext,
           isGlobalAdmin,
         })
       : [];
 
-  const requestHeaders = await headers();
-  const [labsResponse] = await tryCatch(
-    auth.api.listOrganizationTeams({
-      headers: requestHeaders,
-    }),
-  );
-
-  let labs: { id: string; name: string }[] = Array.isArray(labsResponse)
-    ? labsResponse.map((lab) => ({ id: lab.id, name: lab.name }))
-    : [];
-
-  const [userMember] = organizationId
-    ? await safeGetUserMember(session.user.id, organizationId)
-    : [null];
-  const isOrgOwner = userMember?.role === "org-owner";
-
-  if (!isOrgOwner) {
-    const labIds = labs.map((lab) => lab.id);
-    const [memberships] =
-      labIds.length > 0 && organizationId
-        ? await safeGetLabTeamMemberships(organizationId, labIds)
-        : [[]];
-
-    const accessibleLabIds = new Set<string>();
-
-    for (const membership of memberships ?? []) {
-      if (membership.userId === session.user.id) {
-        accessibleLabIds.add(membership.labId);
-      }
-    }
-
-    if (activeLabId) {
-      accessibleLabIds.add(activeLabId);
-    }
-
+  if (!treatsAllLabs) {
     labs = labs.filter((lab) => accessibleLabIds.has(lab.id));
     tests = tests.filter((test) => accessibleLabIds.has(test.labId));
   }
 
-  if (labs.length === 0 && activeLabId) {
-    const [labRecord] = await safeGetLabById(activeLabId);
+  if (labs.length === 0 && labIdForContext) {
+    const [labRecord] = await safeGetLabById(labIdForContext);
     if (labRecord) {
       labs = [{ id: labRecord.id, name: labRecord.name }];
       tests = tests.filter((test) => test.labId === labRecord.id);
@@ -89,7 +126,7 @@ export default async function LabTestsPage({ params }: PageProps<"/[orgSlug]/lab
       <PcrTestsDashboard
         tests={tests}
         labs={labs}
-        activeLabId={activeLabId}
+        activeLabId={labIdForContext}
         canCreate={canCreate}
         canUpdate={canUpdate}
         canDelete={canDelete}

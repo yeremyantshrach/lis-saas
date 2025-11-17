@@ -19,6 +19,7 @@ import {
 } from "@/lib/helpers/action-helpers";
 import { requirePermission } from "@/lib/server-permissions";
 import { revalidatePath } from "next/cache";
+import { safeGetUserMember } from "@/lib/helpers/db-helpers";
 
 function formatValidationErrors(error: z.ZodError): Record<string, string[]> {
   const fieldErrors: Record<string, string[] | undefined> = flattenError(error).fieldErrors;
@@ -142,11 +143,18 @@ export async function updatePcrTestAction(
     return createErrorResult("Select the lab this test belongs to");
   }
 
+  let isOrgOwner = false;
+  if (organizationId && !isGlobalAdmin) {
+    const [member] = await safeGetUserMember(session.user.id, organizationId);
+    isOrgOwner = member?.role === "org-owner";
+  }
+
   const context: LabTestRlsContext = {
     userId: session.user.id,
     organizationId,
     labId: selectedLabId,
     isGlobalAdmin,
+    allowLabChange: isGlobalAdmin || isOrgOwner,
   };
 
   try {

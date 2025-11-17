@@ -36,6 +36,20 @@
       "when": 1762586379594,
       "tag": "0004_dapper_blue_shield",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1763146668805,
+      "tag": "0005_thin_the_hood",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1763405416853,
+      "tag": "0006_overconfident_champions",
+      "breakpoints": true
     }
   ]
 }

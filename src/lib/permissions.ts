@@ -154,8 +154,13 @@ export function usePermissions() {
           "labPatients:create",
           "labPatients:update",
         ],
-        doctor: ["labResults:read", "labResults:update", "labTests:read", "labPatients:read"],
-        receptionist: [
+        "client-doctor": [
+          "labResults:read",
+          "labResults:update",
+          "labTests:read",
+          "labPatients:read",
+        ],
+        "client-assistant": [
           "labOrders:read",
           "labOrders:create",
           "labTests:read",

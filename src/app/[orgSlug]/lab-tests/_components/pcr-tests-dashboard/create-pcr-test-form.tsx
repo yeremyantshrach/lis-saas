@@ -12,6 +12,10 @@ import {
   PCR_TEST_PANELS,
 } from "@/lib/lab-tests/constants";
 import {
+  PATHOGEN_CLINICAL_SIGNIFICANCE_MAX_LENGTH,
+  PATHOGEN_NAME_MAX_LENGTH,
+} from "@/lib/constants/limits";
+import {
   Form,
   FormControl,
   FormDescription,
@@ -216,8 +220,12 @@ export function CreatePcrTestForm({
       };
     }
 
+    const resolvedCreateLabId = shouldShowLabSelect
+      ? undefined
+      : (defaultLabId ?? labOptions[0]?.id ?? undefined);
+
     return {
-      labId: defaultLabId ?? (labOptions.length === 1 ? labOptions[0]?.id : undefined),
+      labId: resolvedCreateLabId,
       testName: "",
       testCode: undefined,
       panel: undefined,
@@ -231,7 +239,15 @@ export function CreatePcrTestForm({
       defaultClinicalNotes: undefined,
       orgSlug,
     };
-  }, [mode, initialData, defaultLabId, labOptions, orgSlug, createEmptyPathogen]);
+  }, [
+    mode,
+    initialData,
+    defaultLabId,
+    labOptions,
+    orgSlug,
+    createEmptyPathogen,
+    shouldShowLabSelect,
+  ]);
 
   const form = useForm<CreatePcrTestFormValues>({
     resolver: zodResolver(createPcrTestSchema),
@@ -336,10 +352,8 @@ export function CreatePcrTestForm({
           router.refresh();
           form.reset({
             labId: shouldShowLabSelect
-              ? values.labId
-              : labOptions.length === 1
-                ? labOptions[0]?.id
-                : undefined,
+              ? undefined
+              : (values.labId ?? defaultLabId ?? labOptions[0]?.id ?? undefined),
             testName: "",
             testCode: undefined,
             panel: undefined,
@@ -374,7 +388,7 @@ export function CreatePcrTestForm({
   const disabled = isPending;
   const submitLabel = disabled ? "Saving..." : mode === "edit" ? "Save changes" : "Save PCR Test";
   const resetLabel = mode === "edit" ? "Reset changes" : "Reset form";
-  const labSelectDisabled = disabled || mode === "edit";
+  const labSelectDisabled = disabled;
   const requiredIndicator = <span className="text-destructive ml-1">*</span>;
 
   const pathogenTargetsError =
@@ -406,7 +420,7 @@ export function CreatePcrTestForm({
                   render={({ field }) => (
                     <FormItem className="md:col-span-1">
                       <FormLabel>
-                        Owning lab
+                        Laboratory
                         {requiredIndicator}
                       </FormLabel>
                       <Select
@@ -416,7 +430,7 @@ export function CreatePcrTestForm({
                       >
                         <FormControl>
                           <SelectTrigger className="w-full" aria-required="true">
-                            <SelectValue placeholder="Select lab" />
+                            <SelectValue placeholder="Select laboratory" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -453,6 +467,7 @@ export function CreatePcrTestForm({
                         disabled={disabled}
                         required
                         aria-required="true"
+                        maxLength={100}
                         {...field}
                       />
                     </FormControl>
@@ -474,6 +489,7 @@ export function CreatePcrTestForm({
                       <Input
                         placeholder="Auto-generates when left blank"
                         disabled={disabled}
+                        maxLength={10}
                         value={field.value ?? ""}
                         onChange={(event) =>
                           field.onChange(event.target.value ? event.target.value : undefined)
@@ -577,7 +593,7 @@ export function CreatePcrTestForm({
                     >
                       <FormControl>
                         <SelectTrigger className="w-full" aria-required="true">
-                          <SelectValue placeholder="Select sample" />
+                          <SelectValue placeholder="Select sample type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -669,6 +685,7 @@ export function CreatePcrTestForm({
                                         disabled={disabled}
                                         required
                                         aria-required="true"
+                                        maxLength={PATHOGEN_NAME_MAX_LENGTH}
                                         {...field}
                                       />
                                     </FormControl>
@@ -720,6 +737,7 @@ export function CreatePcrTestForm({
                                         placeholder="Optional. e.g. Common culprit in onychomycosis for immunocompromised patients."
                                         disabled={disabled}
                                         value={field.value ?? ""}
+                                        maxLength={PATHOGEN_CLINICAL_SIGNIFICANCE_MAX_LENGTH}
                                         onChange={(event) =>
                                           field.onChange(
                                             event.target.value ? event.target.value : undefined,
@@ -865,7 +883,7 @@ export function CreatePcrTestForm({
                                       </FormLabel>
                                       <Select
                                         disabled={disabled}
-                                        value={field.value}
+                                        value={field.value || undefined}
                                         onValueChange={(value) => field.onChange(value)}
                                       >
                                         <FormControl>
@@ -897,6 +915,7 @@ export function CreatePcrTestForm({
                                           placeholder="Optional. e.g. Confers decreased susceptibility to beta-lactams."
                                           disabled={disabled}
                                           value={field.value ?? ""}
+                                          maxLength={PATHOGEN_CLINICAL_SIGNIFICANCE_MAX_LENGTH}
                                           onChange={(event) =>
                                             field.onChange(
                                               event.target.value ? event.target.value : undefined,
@@ -940,6 +959,7 @@ export function CreatePcrTestForm({
                         placeholder="Optional. Describe what this test covers or when to order it."
                         className="min-h-24"
                         disabled={disabled}
+                        maxLength={500}
                         value={field.value ?? ""}
                         onChange={(event) =>
                           field.onChange(event.target.value ? event.target.value : undefined)
@@ -1005,6 +1025,7 @@ export function CreatePcrTestForm({
                         <Input
                           placeholder="e.g. 92130-7"
                           disabled={disabled}
+                          maxLength={10}
                           value={field.value ?? ""}
                           onChange={(event) =>
                             field.onChange(event.target.value ? event.target.value : undefined)
@@ -1052,6 +1073,7 @@ export function CreatePcrTestForm({
                         <Input
                           placeholder="e.g. 87507"
                           disabled={disabled}
+                          maxLength={5}
                           value={field.value ?? ""}
                           onChange={(event) =>
                             field.onChange(event.target.value ? event.target.value : undefined)

@@ -952,6 +952,9 @@ export async function listPatientsForLab(
     await applyPatientRlsContext(tx, { ...context, labId: filters.labId });
 
     const whereClauses: SQL<unknown>[] = [eq(labPatientProfiles.labId, filters.labId)];
+    if (context.organizationId) {
+      whereClauses.push(eq(authLabs.organizationId, context.organizationId));
+    }
 
     if (filters.status && filters.status.length > 0) {
       whereClauses.push(inArray(labPatientProfiles.status, filters.status));

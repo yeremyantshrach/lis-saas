@@ -89,3 +89,12 @@ export async function safeGetLabById(labId: string) {
     }),
   );
 }
+
+export async function safeGetLabsForOrganization(organizationId: string) {
+  return tryCatch(
+    db.query.labs.findMany({
+      where: eq(labs.organizationId, organizationId),
+      orderBy: (lab, { asc }) => [asc(lab.name)],
+    }),
+  );
+}

@@ -695,6 +695,15 @@ export async function upsertPatientProfileAction(
       );
     }
 
+    if (parsed.data.previousLabId && labId && parsed.data.previousLabId !== labId) {
+      await updateLabPatientStatus(
+        { ...context, labId: parsed.data.previousLabId },
+        patientId,
+        parsed.data.previousLabId,
+        "archived",
+      );
+    }
+
     if (labId) {
       await connectPatientToLab(context, {
         patientId,

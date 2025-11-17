@@ -109,12 +109,11 @@ export function EditMemberForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="org-owner">Organization Owner</SelectItem>
                   <SelectItem value="lab-admin">Lab Admin</SelectItem>
                   <SelectItem value="lab-cls">Clinical Laboratory Scientist</SelectItem>
                   <SelectItem value="lab-technician">Laboratory Technician</SelectItem>
-                  <SelectItem value="doctor">Doctor</SelectItem>
-                  <SelectItem value="receptionist">Receptionist</SelectItem>
+                  <SelectItem value="client-doctor">Client Doctor</SelectItem>
+                  <SelectItem value="client-assistant">Client Assistant</SelectItem>
                 </SelectContent>
               </Select>
               {!canChangeRole && (
