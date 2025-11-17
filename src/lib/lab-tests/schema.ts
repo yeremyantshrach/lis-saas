@@ -80,10 +80,24 @@ export const labTests = pgTable(
       )
     `;
 
+    const labBelongsToActiveOrg = sql`
+      EXISTS (
+        SELECT 1
+        FROM auth.labs AS orgLab
+        WHERE orgLab.id = ${table.labId}
+          AND orgLab.organization_id = ${activeOrgId}
+      )
+    `;
+
     const accessibleRow = sql`
       (${isGlobalAdmin})
-      OR (${labScopedAccess})
-      OR (${orgOwnerAccess})
+      OR (
+        ${labBelongsToActiveOrg}
+        AND (
+          ${labScopedAccess}
+          OR ${orgOwnerAccess}
+        )
+      )
     `;
 
     return [
@@ -148,6 +162,12 @@ export const labTestPcrDetails = pgTable(
         SELECT 1
         FROM lab_tests AS parent
         WHERE parent.id = ${table.labTestId}
+          AND EXISTS (
+            SELECT 1
+            FROM auth.labs AS l
+            WHERE l.id = parent.lab_id
+              AND l.organization_id = ${activeOrgId}
+          )
           AND (
             (
               parent.lab_id = ${activeLabId}
@@ -165,12 +185,6 @@ export const labTestPcrDetails = pgTable(
                 WHERE m.user_id = ${currentUserId}
                   AND m.role = 'org-owner'
                   AND m.organization_id = ${activeOrgId}
-              )
-              AND EXISTS (
-                SELECT 1
-                FROM auth.labs AS l
-                WHERE l.id = parent.lab_id
-                  AND l.organization_id = ${activeOrgId}
               )
             )
           )

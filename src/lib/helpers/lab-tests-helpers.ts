@@ -1,6 +1,7 @@
 import { sql, asc, eq, and, ne } from "drizzle-orm";
 import { db } from "@/lib/database";
 import { labTests, labTestPcrDetails } from "@/lib/lab-tests/schema";
+import { labs as orgLabs } from "@/lib/auth/auth-schema";
 import {
   LAB_TEST_TYPES,
   PCR_TEST_PANELS,
@@ -19,6 +20,7 @@ export interface LabTestRlsContext {
   organizationId: string | null;
   labId: string | null;
   isGlobalAdmin?: boolean;
+  allowLabChange?: boolean;
 }
 
 export interface CreatePcrTestInput {
@@ -80,6 +82,14 @@ async function applyLabTestRlsContext(tx: Transaction, context: LabTestRlsContex
 export async function listAccessiblePcrTests(context: LabTestRlsContext) {
   return db.transaction(async (tx) => {
     await applyLabTestRlsContext(tx, context);
+    const filters = [eq(labTests.type, LAB_TEST_TYPES[0])];
+    if (context.organizationId) {
+      filters.push(eq(orgLabs.organizationId, context.organizationId));
+    }
+    let whereClause;
+    for (const clause of filters) {
+      whereClause = whereClause ? and(whereClause, clause) : clause;
+    }
 
     const rows = await tx
       .select({
@@ -101,8 +111,9 @@ export async function listAccessiblePcrTests(context: LabTestRlsContext) {
         resistanceMarkers: labTestPcrDetails.resistanceMarkers,
       })
       .from(labTests)
+      .innerJoin(orgLabs, eq(orgLabs.id, labTests.labId))
       .innerJoin(labTestPcrDetails, eq(labTestPcrDetails.labTestId, labTests.id))
-      .where(eq(labTests.type, LAB_TEST_TYPES[0]))
+      .where(whereClause)
       .orderBy(asc(labTests.testName));
 
     return rows as PcrLabTestRecord[];
@@ -303,8 +314,11 @@ export async function updatePcrLabTest(
       );
     }
 
-    if (input.labId && input.labId !== existing.labId) {
-      throw new Error("Changing the owning lab is not supported.");
+    const nextLabId = input.labId ?? existing.labId;
+    const labChanged = nextLabId !== existing.labId;
+
+    if (labChanged && !context.allowLabChange) {
+      throw new Error("Changing the owning lab is restricted to organization owners.");
     }
 
     const resolvedCode = input.testCode ?? existing.testCode;
@@ -319,6 +333,7 @@ export async function updatePcrLabTest(
     await tx
       .update(labTests)
       .set({
+        labId: nextLabId,
         testCode: resolvedCode,
         testName: input.testName,
         price: input.price,
@@ -328,6 +343,12 @@ export async function updatePcrLabTest(
         defaultClinicalNotes: input.defaultClinicalNotes ?? null,
       })
       .where(eq(labTests.id, input.id));
+
+    if (labChanged) {
+      await tx.execute(
+        sql`select set_config('lis.active_lab_id', ${nextLabId ?? ""}, true) as ignored`,
+      );
+    }
 
     await tx
       .update(labTestPcrDetails)

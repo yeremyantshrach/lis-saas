@@ -128,6 +128,13 @@ export function PatientWizard({
   } | null>(null);
 
   const isEditMode = mode === "edit" || Boolean(existingPatient);
+  const existingPrimaryLabId = useMemo(() => {
+    if (!existingPatient) return undefined;
+    const activeProfile = existingPatient.labProfiles.find(
+      (profile) => profile.status === "active",
+    );
+    return activeProfile?.labId ?? existingPatient.labProfiles[0]?.labId;
+  }, [existingPatient]);
 
   const deriveDefaultValues = (): CreatePatientFormValues => {
     if (!existingPatient) {
@@ -162,7 +169,11 @@ export function PatientWizard({
       return defaults as CreatePatientFormValues;
     }
 
-    const primaryLabId = existingPatient.labProfiles[0]?.labId ?? defaultLabId ?? labs[0]?.id ?? "";
+    const primaryLabId = existingPrimaryLabId ?? defaultLabId ?? labs[0]?.id ?? "";
+
+    const selectedLabProfile =
+      existingPatient.labProfiles.find((profile) => profile.labId === primaryLabId) ??
+      existingPatient.labProfiles[0];
 
     const defaults: Partial<CreatePatientFormValues> = {
       labId: primaryLabId,
@@ -221,7 +232,7 @@ export function PatientWizard({
           medicareEligible: policy.medicareEligible,
           medicaidEligible: policy.medicaidEligible,
         })) ?? [],
-      notes: existingPatient.labProfiles[0]?.notes ?? "",
+      notes: selectedLabProfile?.notes ?? "",
     };
 
     return defaults as CreatePatientFormValues;
@@ -447,6 +458,7 @@ export function PatientWizard({
         const payload: UpsertPatientInput = {
           ...values,
           patientId: existingPatient?.id,
+          previousLabId: existingPrimaryLabId,
           orgSlug,
         };
         const result = await upsertPatientProfileAction(payload);

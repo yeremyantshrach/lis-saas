@@ -10,7 +10,7 @@ import { resendVerificationSchema, type ResendVerificationFormData } from "@/lib
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
 interface VerifyEmailCardProps extends ComponentProps<"div"> {
@@ -70,23 +70,16 @@ export function VerifyEmailCard({ email, className, ...props }: VerifyEmailCardP
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <FieldGroup>
               <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                {...register("email")}
-                disabled={isPending}
-                readOnly={emailIsLocked}
-                aria-invalid={!!errors.email}
-              />
-              <FieldDescription className={cn(errors.email && "text-destructive")}>
-                {errors.email?.message ||
-                  (emailIsLocked
-                    ? "We'll verify the same email you used during sign up."
-                    : "Use the email address associated with your account.")}
-              </FieldDescription>
-            </Field>
+                <Input
+                  id="email"
+                  type="hidden"
+                  placeholder="m@example.com"
+                  {...register("email")}
+                  disabled={isPending}
+                  readOnly={emailIsLocked}
+                  aria-invalid={!!errors.email}
+                />
+              </Field>
               <Field>
                 <Button type="submit" className="w-full" disabled={isPending}>
                   {isPending ? "Sending email..." : "Resend verification email"}

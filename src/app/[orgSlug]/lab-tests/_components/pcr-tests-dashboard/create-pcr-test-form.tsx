@@ -388,7 +388,7 @@ export function CreatePcrTestForm({
   const disabled = isPending;
   const submitLabel = disabled ? "Saving..." : mode === "edit" ? "Save changes" : "Save PCR Test";
   const resetLabel = mode === "edit" ? "Reset changes" : "Reset form";
-  const labSelectDisabled = disabled || mode === "edit";
+  const labSelectDisabled = disabled;
   const requiredIndicator = <span className="text-destructive ml-1">*</span>;
 
   const pathogenTargetsError =
@@ -883,7 +883,7 @@ export function CreatePcrTestForm({
                                       </FormLabel>
                                       <Select
                                         disabled={disabled}
-                                        value={field.value}
+                                        value={field.value || undefined}
                                         onValueChange={(value) => field.onChange(value)}
                                       >
                                         <FormControl>

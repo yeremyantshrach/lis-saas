@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requirePermission } from "@/lib/server-permissions";
 import { createLabSchema, inviteSchema } from "../validations/labs";
 import { safeCreateTeam, safeCreateInvitation } from "@/lib/helpers/auth-helpers";
+import { safeGetLabsForOrganization } from "@/lib/helpers/db-helpers";
 import {
   createSuccessResult,
   createErrorResult,
@@ -15,10 +16,30 @@ export async function createLabAction(
   data: z.infer<typeof createLabSchema>,
 ): Promise<ActionResult> {
   const { session } = await requirePermission("team:create");
+  const organizationId = session.session?.activeOrganizationId;
+
+  if (!organizationId) {
+    return createErrorResult("Select an organization before creating labs");
+  }
+
+  const [existingLabs, labsError] = await safeGetLabsForOrganization(organizationId);
+  if (labsError) {
+    console.error("Failed to load labs for duplicate check", labsError);
+    return createErrorResult("Unable to verify lab uniqueness. Please try again.");
+  }
+
+  const normalizedName = data.name.trim().toLowerCase();
+  const hasDuplicate = (existingLabs ?? []).some(
+    (lab) => lab.name.trim().toLowerCase() === normalizedName,
+  );
+
+  if (hasDuplicate) {
+    return createErrorResult("A lab with this name already exists in your organization.");
+  }
 
   const [result, error] = await safeCreateTeam(
     data.name,
-    session.session?.activeOrganizationId as string,
+    organizationId,
   );
 
   if (error) {

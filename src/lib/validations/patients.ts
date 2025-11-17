@@ -1,10 +1,8 @@
 import { z } from "zod";
 import {
-  PATIENT_DOCUMENT_TYPES,
   PATIENT_GENDERS,
   PATIENT_PAYMENT_METHODS,
   PATIENT_PROFILE_STATUSES,
-  PATIENT_RELATIONSHIP_OPTIONS,
 } from "@/lib/patients/constants";
 
 const phonePattern = /^[0-9+().\-\s]{10,20}$/;
@@ -124,27 +122,28 @@ export const createPatientSchema = patientIdentitySchema.extend({
 });
 
 export const upsertPatientSchema = createPatientSchema.extend({
-  patientId: z.string().uuid().optional(),
+  patientId: z.uuid().optional(),
+  previousLabId: z.uuid().optional(),
 });
 
 export const updatePatientPersonalSchema = patientIdentitySchema.extend({
-  patientId: z.string().uuid({ message: "Invalid patient id" }),
+  patientId: z.uuid({ message: "Invalid patient id" }),
 });
 
 export const updatePatientContactSchema = z.object({
-  patientId: z.string().uuid(),
+  patientId: z.uuid(),
   contact: patientContactSchema,
   orgSlug: z.string().optional(),
 });
 
 export const updatePatientBillingSchema = z.object({
-  patientId: z.string().uuid(),
+  patientId: z.uuid(),
   billing: patientBillingSchema,
   orgSlug: z.string().optional(),
 });
 
 export const replacePatientInsuranceSchema = z.object({
-  patientId: z.string().uuid(),
+  patientId: z.uuid(),
   policies: z.array(patientInsurancePolicySchema),
   orgSlug: z.string().optional(),
 });
@@ -157,8 +156,8 @@ export const linkPatientToLabSchema = z.object({
 });
 
 export const archivePatientSchema = z.object({
-  patientId: z.string().uuid(),
-  labId: z.string().uuid().optional(),
+  patientId: z.uuid(),
+  labId: z.uuid().optional(),
   status: z.enum(PATIENT_PROFILE_STATUSES).default("archived"),
   orgSlug: z.string().optional(),
 });
