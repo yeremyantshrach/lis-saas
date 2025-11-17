@@ -104,7 +104,7 @@ export default async function LabsPage({ params, searchParams }: LabsPageProps) 
 
   const [pendingInvitations] =
     canInvite && organizationId ? await safeFindPendingInvitations(organizationId) : [[]];
-  const filteredPendingInvitations = isOrgOwner ? pendingInvitations ?? [] : [];
+  const filteredPendingInvitations = isOrgOwner ? (pendingInvitations ?? []) : [];
 
   const allowedTabs = ["labs"];
   if (canViewMembers) {

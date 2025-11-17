@@ -37,10 +37,7 @@ export async function createLabAction(
     return createErrorResult("A lab with this name already exists in your organization.");
   }
 
-  const [result, error] = await safeCreateTeam(
-    data.name,
-    organizationId,
-  );
+  const [result, error] = await safeCreateTeam(data.name, organizationId);
 
   if (error) {
     return createErrorResult("Failed to create lab");
